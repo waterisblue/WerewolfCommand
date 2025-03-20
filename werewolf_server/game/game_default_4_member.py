@@ -1,10 +1,10 @@
 import random
 
-from game.base_game import BaseGame
-from role.role_civilian import RoleCivilian
-from role.role_prophet import RoleProPhet
-from role.role_witch import RoleWitch
-from role.role_wolf import RoleWolf
+from werewolf_server.game.base_game import BaseGame
+from werewolf_server.role.role_civilian import RoleCivilian
+from werewolf_server.role.role_prophet import RoleProPhet
+from werewolf_server.role.role_witch import RoleWitch
+from werewolf_server.role.role_wolf import RoleWolf
 
 
 class GameDefault4Member(BaseGame):
@@ -12,13 +12,14 @@ class GameDefault4Member(BaseGame):
         self.member = 4
         self.current_member = 0
         self.roles = [RoleProPhet, RoleCivilian, RoleWitch, RoleWolf]
+        self.day = 1
 
 
     async def assign_roles(self):
         idx = random.randint(0, len(self.roles) - 1)
-        role = self.roles[idx]
-        self.roles.remove(role)
-        return role
+        rand_role = self.roles[idx]
+        self.roles.remove(rand_role)
+        return rand_role
 
     async def night_phase(self):
         pass
@@ -34,9 +35,3 @@ class GameDefault4Member(BaseGame):
 
     async def start(self):
         pass
-
-if __name__ == '__main__':
-    game = GameDefault4Member()
-    for i in range(0, 4):
-        role = game.assign_roles()
-        print(role)

@@ -1,4 +1,4 @@
-from role.base_role import BaseRole
+from werewolf_server.role.base_role import BaseRole
 
 
 class RoleProPhet(BaseRole):

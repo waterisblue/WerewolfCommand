@@ -1,15 +1,12 @@
-from abc import ABC, abstractmethod
+from werewolf_server.role.base_role import BaseRole
 
 
-class BaseRole(ABC):
-    @abstractmethod
+class RoleWolf(BaseRole):
     async def night_action(self):
         pass
 
-    @abstractmethod
     async def day_action(self):
         pass
 
-    @abstractmethod
     async def voting_action(self):
         pass

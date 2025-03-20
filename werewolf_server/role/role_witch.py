@@ -1,7 +1,7 @@
-from role.base_role import BaseRole
+from werewolf_server.role.base_role import BaseRole
 
 
-class RoleWolf(BaseRole):
+class RoleWitch(BaseRole):
     async def night_action(self):
         pass
 
