@@ -1,26 +1,41 @@
-import socket
-import threading
-import json
+import asyncio
 import logging
+
+from werewolf_server.model.message import Message
+
 
 class WerewolfServer:
     def __init__(self, host='0.0.0.0', port=5555):
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server.bind((host, port))
-        self.server.listen(10)
+        self.host = host
+        self.port = port
 
-        logging.info(f"Server started on {host}:{port}")
+    async def handle_client(self, reader, writer, process_message):
+        addr = writer.get_extra_info("peername")
+        logging.info(f"New connection from {addr}")
 
+        try:
+            data = await reader.read(1024)
+            if not data:
+                return
 
-    def handle_client(self, client):
-        data = client.recv(1024).decode()
-        if data:
-            message = json.loads(data)
-            return message
+            message = Message.from_json(data.decode())
+            await process_message(message)
+        except Exception as e:
+            logging.error(f"Error handling client {addr}: {e}")
+        finally:
+            writer.close()
+            await writer.wait_closed()
+            logging.info(f"Connection closed: {addr}")
 
-    def run(self):
-        while True:
-            client, addr = self.server.accept()
-            logging.info(f"New connection from {addr}")
-            threading.Thread(target=self.handle_client, args=(client,)).start()
+    async def run(self, process_message):
+        server = await asyncio.start_server(
+            lambda r, w: self.handle_client(r, w, process_message),
+            self.host,
+            self.port,
+        )
+        addr = server.sockets[0].getsockname()
+        logging.info(f"Server running on {addr}")
+
+        async with server:
+            await server.serve_forever()
 
