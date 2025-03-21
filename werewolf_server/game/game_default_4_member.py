@@ -1,28 +1,41 @@
+import logging
 import random
+from typing import List
 
-from sympy.strategies.core import switch
-
+from werewolf_common.model.message import Message
 from werewolf_server.game.base_game import BaseGame
+from werewolf_server.model.member import Member
 from werewolf_server.role.role_civilian import RoleCivilian
 from werewolf_server.role.role_prophet import RoleProPhet
 from werewolf_server.role.role_witch import RoleWitch
 from werewolf_server.role.role_wolf import RoleWolf
+from werewolf_server.server import WerewolfServer
+from werewolf_server.utils.i18n import Language
 
 
 class GameDefault4Member(BaseGame):
     def __init__(self):
-        self.__max_member = 4
-        self.__roles = [RoleProPhet, RoleCivilian, RoleWitch, RoleWolf]
-        self.__day = 1
-        self.__members = []
-        self.__server = None
+        super().__init__()
+        self.max_member = 4
+        self.roles = [RoleProPhet, RoleCivilian, RoleWitch, RoleWolf]
+        self.day = 1
+        self.members: List[Member] = []
 
 
     async def assign_roles(self):
-        idx = random.randint(0, len(self.__roles) - 1)
-        rand_role = self.__roles[idx]
-        self.__roles.remove(rand_role)
-        return rand_role
+        for m in self.members[:4]:
+            idx = random.randint(0, len(self.roles) - 1)
+            rand_role = self.roles[idx]
+            self.roles.remove(rand_role)
+            m.role = rand_role()
+            msg = Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('assign_role', role=m.role.name)
+            )
+            logging.info(f'{m.addr} assigned role {m.role.name}.')
+            await WerewolfServer.send_message(msg, m)
+
 
     async def night_phase(self):
         pass
@@ -36,9 +49,13 @@ class GameDefault4Member(BaseGame):
     async def check_winner(self):
         pass
 
-    async def process_message(self, message):
-        print(message)
+    def add_member(self, member: Member):
+        self.members.append(member)
 
-    def set_server(self, server):
-        self.__server = server
-
+    async def start(self):
+        await WerewolfServer.send_message(Message(
+            code=Message.CODE_SUCCESS,
+            type=Message.TYPE_TEXT,
+            detail=Language.get_translation('game_start')
+        ), *self.members)
+        await self.assign_roles()

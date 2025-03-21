@@ -19,17 +19,16 @@ GAME_MODE = {
 }
 
 async def main():
-    la = Language()
-    port = input(la.get_translation('port_need'))
+    port = input(Language.get_translation('port_need'))
 
-    game_mode = input(la.get_translation('game_mode_select'))
+    game_mode = input(Language.get_translation('game_mode_select'))
+
     game = GAME_MODE.get(game_mode)()
+    server = WerewolfServer(game=game, port=int(port))
+    game.server = server
+    asyncio.create_task(server.run())
 
-    server = WerewolfServer(port=int(port))
-    game.set_server(server)
-    asyncio.create_task(server.run(game.process_message))
-
-    print(la.get_translation('server_starting', host='0.0.0.0', port=port))
+    print(Language.get_translation('server_starting', host='0.0.0.0', port=port))
     await asyncio.sleep(10000)
 
 

@@ -22,11 +22,10 @@ class WerewolfClient:
     async def listen_for_messages(self):
         try:
             while True:
-                data = await self.reader.read(1024)
-                if not data:
-                    break
-
-                message = Message.from_json(data.decode())
+                length = await self.reader.read(4)
+                length = int.from_bytes(length, byteorder='big')
+                data = await self.reader.read(length)
+                message = Message.from_json(data)
                 logging.info(f"Received: {message}")
 
         except Exception as e:
@@ -42,7 +41,7 @@ class WerewolfClient:
                     break
 
                 message = Message(code=0, type="Player", detail=content)
-                self.writer.write(message.to_json().encode())
+                self.writer.write(message.to_json())
                 await self.writer.drain()
         except Exception as e:
             logging.error(f"Error sending messages: {e}")
@@ -51,6 +50,17 @@ class WerewolfClient:
             await self.writer.wait_closed()
             logging.info("Connection closed")
 
-if __name__ == "__main__":
+
+async def main():
     client = WerewolfClient()
-    asyncio.run(client.connect())
+    asyncio.create_task(client.connect())
+    client1 = WerewolfClient()
+    asyncio.create_task(client1.connect())
+    client2 = WerewolfClient()
+    asyncio.create_task(client2.connect())
+    client3 = WerewolfClient()
+    asyncio.create_task(client3.connect())
+    await asyncio.sleep(100000)
+
+if __name__ == "__main__":
+    asyncio.run(main())

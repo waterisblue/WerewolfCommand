@@ -7,24 +7,36 @@ class RoleStatus(Enum):
     STATUS_DEAD = 1
     STATUS_EXILE = 2
 
+class RoleChannel(Enum):
+    CHANNEL_NORMAL = 0
+    CHANNEL_WOLF = 1
 
 class BaseRole(ABC):
-    _status: RoleStatus
-
+    @property
     @abstractmethod
-    async def night_action(self):
+    def status(self):
+        pass
+
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
+    @property
+    @abstractmethod
+    def channels(self):
         pass
 
     @abstractmethod
-    async def day_action(self):
+    async def night_action(self, member):
         pass
 
     @abstractmethod
-    async def voting_action(self):
+    async def day_action(self, member):
         pass
 
-    async def get_role_status(self):
-        return self._status
+    @abstractmethod
+    async def voting_action(self, member):
+        pass
 
-    async def set_role_status(self, status: RoleStatus):
-        self._status = status
+

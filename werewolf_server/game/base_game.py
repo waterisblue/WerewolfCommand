@@ -2,6 +2,10 @@ from abc import ABC, abstractmethod
 
 
 class BaseGame(ABC):
+    def __init__(self):
+        self.members = None
+        self.max_member = None
+
     @abstractmethod
     async def assign_roles(self):
         pass
@@ -20,4 +24,12 @@ class BaseGame(ABC):
 
     @abstractmethod
     async def check_winner(self):
+        pass
+
+    @abstractmethod
+    def add_member(self, member):
+        pass
+
+    @abstractmethod
+    async def start(self):
         pass

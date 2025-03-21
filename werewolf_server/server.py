@@ -1,56 +1,45 @@
 import asyncio
 import logging
 
-from werewolf_common.model.message import Message
+from werewolf_server.game.base_game import BaseGame
+from werewolf_server.model.member import Member
+
 
 class WerewolfServer:
-    def __init__(self, host='0.0.0.0', port=5555):
+    def __init__(self, game, host='0.0.0.0', port=5555):
+        self.game: BaseGame = game
         self.host = host
         self.port = port
-        self.clients = set()
+        self.count = 0
+        self.count_lock = asyncio.Lock()
 
-    async def handle_client(self, reader, writer, process_message):
+    async def handle_client(self, reader, writer):
         addr = writer.get_extra_info("peername")
-        logging.info(f"New connection from {addr}")
-        self.clients.add(writer)
+        async with self.count_lock:
+            self.count += 1
+            member = Member(self.count, addr, reader, writer)
+            self.game.add_member(member)
+            if len(self.game.members) == self.game.max_member:
+                logging.info('member enough, game start.')
+                await self.game.start()
+        logging.info(f"New connection from {addr}, now member count: {len(self.game.members)}, max count: {self.game.max_member}")
 
-        try:
-            while True:
-                data = await reader.read(1024)
-                await process_message(Message.from_json(data))
-                logging.info(f"Received from {addr}: {data}")
-
-        except Exception as e:
-            logging.error(f"Error with client {addr}: {e}")
-        finally:
-            self.clients.remove(writer)
-            writer.close()
-            await writer.wait_closed()
-            logging.info(f"Connection closed: {addr}")
-
-    async def broadcast(self, message):
-        data = message.to_json().encode()
-        for client in self.clients:
+    @staticmethod
+    async def send_message(message, *members):
+        data = message.to_json()
+        for member in members:
             try:
-                client.write(data)
-                await client.drain()
+                length = len(data)
+                member.writer.write(length.to_bytes(4, byteorder='big'))
+                member.writer.write(data)
+                await member.writer.drain()
+                logging.info(f'send {data} to {member.addr}')
             except Exception as e:
                 logging.error(e)
-                pass
 
-    async def send_message_by_client(self, message, clients):
-        data = message.to_json().encode()
-        for client in self.clients:
-            try:
-                client.write(data)
-                await client.drain()
-            except Exception as e:
-                logging.error(e)
-                pass
-
-    async def run(self, process_message):
+    async def run(self):
         server = await asyncio.start_server(
-            lambda r, w: self.handle_client(r, w, process_message),
+            lambda r, w: self.handle_client(r, w),
             self.host,
             self.port
         )

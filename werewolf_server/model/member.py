@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from werewolf_client.client import WerewolfClient
 from werewolf_server.role.base_role import BaseRole
 
 
@@ -9,10 +8,11 @@ class Member:
     STATUS_ONLINE = 0
     STATUS_DISCONNECT = -1
 
-    name: str
     role: BaseRole
-    client: WerewolfClient
-    def __init__(self, name, client):
-        self.name = name
-        self.client = client
+
+    def __init__(self, no, addr, reader, writer):
+        self.no = no
+        self.addr = addr
         self.status = Member.STATUS_ONLINE
+        self.reader = reader
+        self.writer = writer

@@ -2,7 +2,6 @@ import json
 import logging
 from dataclasses import dataclass
 
-from openpyxl.cell.cell import TYPE_ERROR
 
 
 @dataclass
@@ -11,6 +10,7 @@ class Message:
     CODE_FAILED = -1
 
     TYPE_ERROR = 'error'
+    TYPE_TEXT = 'text'
 
     code: int
     type: str
@@ -26,7 +26,7 @@ class Message:
             'code': self.code,
             'type': self.type,
             'detail': self.detail
-        }, ensure_ascii=False)
+        }, ensure_ascii=False).encode()
 
     @classmethod
     def from_json(cls, json_str):
