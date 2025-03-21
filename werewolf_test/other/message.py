@@ -1,6 +1,6 @@
 import unittest
 
-from werewolf_server.model.message import Message
+from werewolf_common.model.message import Message
 
 
 class TestMessage(unittest.TestCase):

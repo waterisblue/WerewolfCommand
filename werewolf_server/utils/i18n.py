@@ -11,10 +11,15 @@ class Language:
                     'en': 'Darkness falls, {user} get ready.'
                 },
                 'port_need': {
-                    'zh-cn': '请输入端口'
+                    'zh-cn': '请输入端口：'
                 },
                 'server_starting': {
-                    'zh-cn': 'Server started on {host}:{port}'
+                    'zh-cn': '服务器已开启： {host}:{port}'
+                },
+                'game_mode_select': {
+                    'zh-cn': f'请选择你要进行的游戏模式\n'
+                             f'1. 四人局（预女民狼）\n'
+                             f'输入游戏对应的编号：'
                 }
             }
             cls._instance.current_language = cls.default_language
