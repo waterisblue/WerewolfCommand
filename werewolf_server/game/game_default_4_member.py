@@ -4,6 +4,7 @@ import random
 from collections import OrderedDict
 from typing import List
 
+from fiona.crs import defaultdict
 
 from werewolf_common.model.message import Message
 from werewolf_server.game.base_game import BaseGame
@@ -25,6 +26,7 @@ class GameDefault4Member(BaseGame):
         self.roles = [RoleProPhet, RoleCivilian, RoleWitch, RoleWolf]
         self.day = 1
         self.members: List[Member] = []
+        self.speak_time = 60
 
 
     async def assign_roles(self):
@@ -125,7 +127,49 @@ class GameDefault4Member(BaseGame):
             if member.role.status != RoleStatus.STATUS_ALIVE:
                 continue
             actions.append(member.role.voting_action(game=self, member=member))
-        await asyncio.gather(*actions)
+        votes = await asyncio.gather(*actions)
+
+        res = defaultdict(0)
+        for vote in votes:
+            res[vote] += 1
+
+        vote_res = ''
+        for m, v in res.items():
+            vote_res += Language.get_translation('exile_member_stat', no=m.no, v=v)
+
+        await WerewolfServer.send_message(
+            Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('exile_member_result', res=vote_res)
+            ),
+            self.members
+        )
+
+        max_votes = max(res.values()) if res else 0
+
+        exiles = [member for member, count in res.items() if count == max_votes]
+        if len(exiles) > 1:
+            await WerewolfServer.send_message(
+                Message(
+                    code=Message.CODE_SUCCESS,
+                    type=Message.TYPE_TEXT,
+                    detail=Language.get_translation('exile_member_equal')
+                ),
+                self.members
+            )
+            return
+        exiles = exiles[0]
+        exiles.status = RoleStatus.STATUS_EXILE
+        await WerewolfServer.send_message(
+            Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('exile_member', no=exiles.no)
+            ),
+            self.members
+        )
+        return
 
     async def check_winner(self):
         wolves_count = sum(1 for member in self.members if member.role.clamp == Clamp.CLAMP_WOLF and member.role.status == RoleStatus.STATUS_ALIVE)

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 class BaseGame(ABC):
     def __init__(self):
+        self.speak_time = None
         self.members = None
         self.max_member = None
 

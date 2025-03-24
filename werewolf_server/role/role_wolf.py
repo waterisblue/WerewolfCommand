@@ -1,5 +1,8 @@
+from werewolf_common.model.message import Message
 from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel, NightPriority, Clamp
+from werewolf_server.server import WerewolfServer
 from werewolf_server.utils.i18n import Language
+from werewolf_server.utils.time_task import start_timer_task
 
 
 class RoleWolf(BaseRole):
@@ -39,7 +42,24 @@ class RoleWolf(BaseRole):
         pass
 
     async def day_action(self, game, member):
-        pass
+        speak_done = False
+
+        def on_timer_done():
+            nonlocal speak_done
+            speak_done = True
+
+        await start_timer_task(game.speak_time, on_timer_done)
+        await WerewolfServer.read_ready(member)
+        while not speak_done:
+            msg = await WerewolfServer.read_message(member)
+            if msg.type == Message.TYPE_SPARK_DONE:
+                return
+            await WerewolfServer.send_message(Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=f'{member.no}: {msg.detail}'
+            ))
+        return
 
     async def voting_action(self, game, member):
         pass

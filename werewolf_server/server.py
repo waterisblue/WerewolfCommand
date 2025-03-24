@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from werewolf_common.model.message import Message
 from werewolf_server.game.base_game import BaseGame
 from werewolf_server.model.member import Member
 
@@ -36,6 +37,20 @@ class WerewolfServer:
                 logging.info(f'send {data} to {member.addr}')
             except Exception as e:
                 logging.error(e)
+
+    @staticmethod
+    async def read_ready(member):
+        data = await member.reader.read()
+        while data:
+            data = await member.reader.read()
+
+    @staticmethod
+    async def read_message(member):
+        length = 0
+        while not length:
+            length = await member.reader.read(4)
+        data = await member.reader.read(length)
+        return Message.from_json(data)
 
     async def run(self):
         server = await asyncio.start_server(
