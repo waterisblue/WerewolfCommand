@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 class BaseGame(ABC):
     def __init__(self):
         self.members = None

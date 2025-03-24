@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel
+from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel, NightPriority, Clamp
 from werewolf_server.utils.i18n import Language
 
 
@@ -9,6 +9,16 @@ class RoleCivilian(BaseRole):
         self._status = RoleStatus.STATUS_ALIVE
         self._name = Language.get_translation('civilian')
         self._channels =  [RoleChannel.CHANNEL_NORMAL,]
+        self._priority = NightPriority.PRIORITY_CIVILIAN
+        self._clamp = Clamp.CLAMP_GOD_PEOPLE
+
+    @property
+    def clamp(self):
+        return self._clamp
+
+    @property
+    def priority(self):
+        return self._priority.value
 
     @property
     def channels(self):
@@ -26,11 +36,11 @@ class RoleCivilian(BaseRole):
     def name(self):
         return self._name
 
-    async def night_action(self, member):
+    async def night_action(self, game, member):
         pass
 
-    async def day_action(self, member):
+    async def day_action(self, game, member):
         pass
 
-    async def voting_action(self, member):
+    async def voting_action(self, game, member):
         pass

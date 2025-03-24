@@ -1,15 +1,20 @@
+import asyncio
 import logging
 import random
+from collections import OrderedDict
 from typing import List
+
 
 from werewolf_common.model.message import Message
 from werewolf_server.game.base_game import BaseGame
 from werewolf_server.model.member import Member
+from werewolf_server.role.base_role import RoleStatus, Clamp
 from werewolf_server.role.role_civilian import RoleCivilian
 from werewolf_server.role.role_prophet import RoleProPhet
 from werewolf_server.role.role_witch import RoleWitch
 from werewolf_server.role.role_wolf import RoleWolf
 from werewolf_server.server import WerewolfServer
+from werewolf_server.utils.game import circular_access
 from werewolf_server.utils.i18n import Language
 
 
@@ -38,16 +43,98 @@ class GameDefault4Member(BaseGame):
 
 
     async def night_phase(self):
-        pass
+        await WerewolfServer.send_message(
+            Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('darkness')
+            ),
+            self.members
+        )
+        members_sorted = sorted(self.members, key=lambda m: m.role.priority)
+        members_priority = OrderedDict()
+
+        for member in members_sorted:
+            priority = member.role.priority
+            if priority not in members_priority:
+                members_priority[priority] = []
+            members_priority[priority].append(member)
+
+        for _, members in members_priority.items():
+            actions = []
+            for member in members:
+                actions.append(member.role.night_action(game=self, member=member))
+            await asyncio.gather(*actions)
+
 
     async def day_phase(self):
-        pass
+        await WerewolfServer.send_message(
+            Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('dawn')
+            ),
+            self.members
+        )
+        start_index = random.randint(0, self.max_member)
+        circular_members = circular_access(self.members, start_index)
+        alive_members = [m for m in circular_members if m.role.status == RoleStatus.STATUS_ALIVE]
+        alive_length = len(alive_members)
+
+        for index, member in enumerate(alive_members):
+            if index < alive_length - 1:
+                next_member = alive_members[index + 1]
+                await WerewolfServer.send_message(
+                    Message(
+                        code=Message.CODE_SUCCESS,
+                        type=Message.TYPE_TEXT,
+                        detail=Language.get_translation('speak', no=member.no, next=next_member.no)
+                    ),
+                    self.members
+                )
+            else:
+                await WerewolfServer.send_message(
+                    Message(
+                        code=Message.CODE_SUCCESS,
+                        type=Message.TYPE_TEXT,
+                        detail=Language.get_translation('speak_last', no=member.no)
+                    ),
+                    self.members
+                )
+            await member.role.day_action(game=self, member=member)
+            await WerewolfServer.send_message(
+                Message(
+                    code=Message.CODE_SUCCESS,
+                    type=Message.TYPE_TEXT,
+                    detail=Language.get_translation('speak_end', no=member.no)
+                ),
+                self.members
+            )
 
     async def voting_phase(self):
-        pass
+        await WerewolfServer.send_message(
+            Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('voting')
+            ),
+            self.members
+        )
+        actions = []
+        for member in self.members:
+            if member.role.status != RoleStatus.STATUS_ALIVE:
+                continue
+            actions.append(member.role.voting_action(game=self, member=member))
+        await asyncio.gather(*actions)
 
     async def check_winner(self):
-        pass
+        wolves_count = sum(1 for member in self.members if member.role.clamp == Clamp.CLAMP_WOLF and member.role.status == RoleStatus.STATUS_ALIVE)
+        god_people_count = sum(1 for member in self.members if member.role == Clamp.CLAMP_GOD_PEOPLE and member.role.status == RoleStatus.STATUS_ALIVE)
+        if wolves_count == 0:
+            return Clamp.CLAMP_GOD_PEOPLE
+        elif wolves_count >= god_people_count:
+            return Clamp.CLAMP_WOLF
+        return False
 
     def add_member(self, member: Member):
         self.members.append(member)
@@ -59,3 +146,7 @@ class GameDefault4Member(BaseGame):
             detail=Language.get_translation('game_start')
         ), *self.members)
         await self.assign_roles()
+        while not await self.check_winner():
+            await self.night_phase()
+            await self.day_phase()
+            await self.voting_phase()

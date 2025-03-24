@@ -7,8 +7,8 @@ class Language:
             cls._instance = super(Language, cls).__new__(cls)
             cls._instance.translations = {
                 'darkness': {
-                    'zh-cn': '天黑请闭眼，{user} 请准备好。',
-                    'en': 'Darkness falls, {user} get ready.'
+                    'zh-cn': '天黑请闭眼',
+                    'en': 'Darkness falls'
                 },
                 'port_need': {
                     'zh-cn': '请输入端口：'
@@ -38,6 +38,24 @@ class Language:
                 },
                 'civilian': {
                     'zh-cn': '平民'
+                },
+                'wolf_action': {
+                    'zh-cn': '狼人请行动，狼人玩家：{wolfs}'
+                },
+                'dawn': {
+                    'zh-cn': '天亮了'
+                },
+                'speak': {
+                    'zh-cn': '{no}号玩家开始发言，{next}号玩家请准备'
+                },
+                'speak_last': {
+                    'zh-cn': '{no}号玩家开始发言，玩家请准备投票'
+                },
+                'speak_end': {
+                    'zh-cn': '{no}号玩家发言结束'
+                },
+                'voting': {
+                    'zh-cn': '玩家请开始投票'
                 }
             }
             cls._instance.current_language = cls.default_language

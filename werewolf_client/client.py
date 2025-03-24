@@ -52,14 +52,9 @@ class WerewolfClient:
 
 
 async def main():
-    client = WerewolfClient()
-    asyncio.create_task(client.connect())
-    client1 = WerewolfClient()
-    asyncio.create_task(client1.connect())
-    client2 = WerewolfClient()
-    asyncio.create_task(client2.connect())
-    client3 = WerewolfClient()
-    asyncio.create_task(client3.connect())
+    for i in range(4):
+        client = WerewolfClient()
+        asyncio.create_task(client.connect())
     await asyncio.sleep(100000)
 
 if __name__ == "__main__":
