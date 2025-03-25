@@ -26,8 +26,8 @@ class GameDefault4Member(BaseGame):
         self.roles = [RoleProPhet, RoleCivilian, RoleWitch, RoleWolf]
         self.day = 1
         self.members: List[Member] = []
-        self.speak_time = 60
-        self.kill_time = 30
+        self.speak_time = 10
+        self.kill_time = 10
         self.now_killed = None
 
 
@@ -138,7 +138,7 @@ class GameDefault4Member(BaseGame):
             actions.append(member.role.voting_action(game=self, member=member))
         votes = await asyncio.gather(*actions)
 
-        res = defaultdict(0)
+        res = defaultdict(int)
         for vote in votes:
             res[vote] += 1
 
@@ -199,6 +199,9 @@ class GameDefault4Member(BaseGame):
             type=Message.TYPE_TEXT,
             detail=Language.get_translation('game_start')
         ), *self.members)
+        await WerewolfServer.send_detail(Language.get_translation('game_nos', nos='1, 2, 3, 4'), *self.members)
+        for m in self.members:
+            await WerewolfServer.send_detail(Language.get_translation('game_no', no=m.no), m)
         await self.assign_roles()
         logging.info('role assigned done.')
         while not await self.check_winner():

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from werewolf_common.model.message import Message
@@ -41,7 +42,6 @@ class RoleProPhet(BaseRole):
 
 
     async def night_action(self, game, member):
-        logging.info('prophet night action')
         check_success = False
         while not check_success:
             try:
@@ -52,13 +52,15 @@ class RoleProPhet(BaseRole):
                     detail=Language.get_translation('check_check_no')
                 ), member)
                 msg = await WerewolfServer.read_message(member)
+                if not msg:
+                    continue
                 if msg.type != Message.TYPE_CHOOSE:
                     continue
-                no = int(msg.detail.strip())
+                no = int(msg.detail)
                 check_member = None
-                for member in game.members:
-                    if member.no == no and member.status == RoleStatus.STATUS_ALIVE:
-                        check_member = member
+                for m in game.members:
+                    if m.no == no and m.role.status == RoleStatus.STATUS_ALIVE and m.no != game.now_killed.no:
+                        check_member = m
                 if not check_member:
                     await WerewolfServer.send_message(Message(
                         code=Message.CODE_SUCCESS,
@@ -72,7 +74,7 @@ class RoleProPhet(BaseRole):
                 await WerewolfServer.send_message(Message(
                     code=Message.CODE_SUCCESS,
                     type=Message.TYPE_TEXT,
-                    detail=Language.get_translation('check_member_role', no=member.no, role_name=member_role)
+                    detail=Language.get_translation('check_member_role', no=check_member.no, role_name=member_role)
                 ), member)
                 return
             except Exception as e:
@@ -80,16 +82,19 @@ class RoleProPhet(BaseRole):
 
 
     async def day_action(self, game, member):
-        speak_done = False
+        speak_done = asyncio.Event()
+        speak_done.set()
 
         def on_timer_done():
             nonlocal speak_done
-            speak_done = True
+            speak_done.clear()
 
         await start_timer_task(game.speak_time, on_timer_done)
         await WerewolfServer.read_ready(member)
-        while not speak_done:
-            msg = await WerewolfServer.read_message(member)
+        while speak_done.is_set():
+            msg = await WerewolfServer.read_message(member, speak_done)
+            if not msg:
+                continue
             if msg.type == Message.TYPE_SPARK_DONE:
                 return
             await WerewolfServer.send_message(Message(
@@ -114,7 +119,7 @@ class RoleProPhet(BaseRole):
                 no = int(msg.detail.strip())
                 check_member = None
                 for m in game.members:
-                    if m.no == no and m.status == RoleStatus.STATUS_ALIVE:
+                    if m.no == no and m.role.status == RoleStatus.STATUS_ALIVE:
                         check_member = m
                 if not check_member:
                     await WerewolfServer.send_message(Message(

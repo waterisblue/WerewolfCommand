@@ -43,15 +43,47 @@ class WerewolfServer:
                 logging.error(e)
 
     @staticmethod
-    async def read_ready(member):
-        await member.reader.read(1024)
+    async def send_detail(detail, *members):
+        data = Message(
+            code=Message.CODE_SUCCESS,
+            type=Message.TYPE_TEXT,
+            detail=detail
+        ).to_json()
+        for member in members:
+            try:
+                logging.info(f'send {data.decode()} to {member.addr}')
+                length = len(data)
+                member.writer.write(length.to_bytes(4, byteorder='big'))
+                member.writer.write(data)
+                await member.writer.drain()
+            except Exception as e:
+                logging.error(e)
+
+
 
     @staticmethod
-    async def read_message(member):
+    async def read_ready(member):
+        try:
+            while True:
+                data = await asyncio.wait_for(member.reader.read(1024), timeout=0.1)
+                if not data:
+                    break
+        except asyncio.TimeoutError:
+            pass
+
+    @staticmethod
+    async def read_message(member, speak_done=None):
         length = 0
         while not length:
-            length = await member.reader.read(4)
-        data = await member.reader.read(length)
+            if speak_done:
+                if not speak_done.is_set():
+                    return None
+            try:
+                length = await asyncio.wait_for(member.reader.read(4), timeout=0.1)
+            except asyncio.TimeoutError:
+                length = 0
+                pass
+        data = await member.reader.read(int.from_bytes(length, byteorder='big'))
         logging.info(f'read {data.decode()} from {member.addr}')
         return Message.from_json(data)
 
@@ -65,4 +97,3 @@ class WerewolfServer:
 
         async with server:
             await server.serve_forever()
-

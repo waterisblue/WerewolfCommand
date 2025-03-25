@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from abc import abstractmethod
 
@@ -41,20 +42,22 @@ class RoleCivilian(BaseRole):
         return self._name
 
     async def night_action(self, game, member):
-        logging.info('civilian night action')
         return
 
     async def day_action(self, game, member):
-        speak_done = False
+        speak_done = asyncio.Event()
+        speak_done.set()
 
         def on_timer_done():
             nonlocal speak_done
-            speak_done = True
+            speak_done.clear()
 
         await start_timer_task(game.speak_time, on_timer_done)
         await WerewolfServer.read_ready(member)
-        while not speak_done:
-            msg = await WerewolfServer.read_message(member)
+        while speak_done.is_set():
+            msg = await WerewolfServer.read_message(member, speak_done)
+            if not msg:
+                continue
             if msg.type == Message.TYPE_SPARK_DONE:
                 return
             await WerewolfServer.send_message(Message(
@@ -78,7 +81,7 @@ class RoleCivilian(BaseRole):
                 no = int(msg.detail.strip())
                 check_member = None
                 for m in game.members:
-                    if m.no == no and m.status == RoleStatus.STATUS_ALIVE:
+                    if m.no == no and m.role.status == RoleStatus.STATUS_ALIVE:
                         check_member = m
                 if not check_member:
                     await WerewolfServer.send_message(Message(

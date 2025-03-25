@@ -1,8 +1,6 @@
 import asyncio
 import logging
 
-from urllib3.filepost import writer
-
 from werewolf_common.model.message import Message
 
 logging.basicConfig(level=logging.INFO)
@@ -24,12 +22,14 @@ class WerewolfClient:
     async def listen_for_messages(self):
         try:
             while True:
-                length = await self.reader.read(4)
+                length = 0
+                while not length:
+                    length = await self.reader.read(4)
                 length = int.from_bytes(length, byteorder='big')
                 data = await self.reader.read(length)
                 message = Message.from_json(data)
-                logging.info(f"Received: {message}")
-
+                if message.type == Message.TYPE_TEXT:
+                    print(message.detail)
         except Exception as e:
             logging.error(f"Error receiving messages: {e}")
         finally:
@@ -39,18 +39,22 @@ class WerewolfClient:
         try:
             while True:
                 content = await asyncio.to_thread(input, "Enter message: ")
-                if content.lower() == "exit":
-                    break
                 type = Message.TYPE_TEXT
-                content_type = content[:2]
-                if content_type == 'c+':
-                    type = Message.TYPE_CHOOSE
-                    content = content[2:]
-                # elif content_type == 'd+':
-                #     type = Message.TYPE_SPARK_DONE
+                if len(content) > 2:
+                    content_type = content[:2]
+                    if content_type == 'c+':
+                        type = Message.TYPE_CHOOSE
+                        content = content[2:]
+                    elif content_type == 'd+':
+                        type = Message.TYPE_SPARK_DONE
                 message = Message(code=Message.CODE_SUCCESS, type=type, detail=content)
-                self.writer.write(message.to_json())
+                data = message.to_json()
+                length = len(data)
+                self.writer.write(length.to_bytes(4, byteorder='big'))
+                self.writer.write(data)
                 await self.writer.drain()
+                logging.info(message)
+
         except Exception as e:
             logging.error(f"Error sending messages: {e}")
         finally:

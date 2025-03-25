@@ -10,7 +10,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("app.log", encoding="utf-8")
+        # logging.FileHandler("app.log", encoding="utf-8")
     ]
 )
 
@@ -19,10 +19,11 @@ GAME_MODE = {
 }
 
 async def main():
-    port = input(Language.get_translation('port_need'))
-
-    game_mode = input(Language.get_translation('game_mode_select'))
-
+    # port = input(Language.get_translation('port_need'))
+    #
+    # game_mode = input(Language.get_translation('game_mode_select'))
+    port = 5555
+    game_mode = '1'
     game = GAME_MODE.get(game_mode)()
     server = WerewolfServer(game=game, port=int(port))
     game.server = server

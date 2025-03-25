@@ -21,6 +21,12 @@ class Language:
                              '1. 四人局（预女民狼）\n'
                              '输入游戏对应的编号：'
                 },
+                'game_nos': {
+                    'zh-cn': '参与玩家编号有: {nos}'
+                },
+                'game_no': {
+                    'zh-cn': '你的玩家编号是: {no}'
+                },
                 'game_start': {
                     'zh-cn': '全部玩家已准备，游戏开始'
                 },
@@ -40,7 +46,9 @@ class Language:
                     'zh-cn': '平民'
                 },
                 'wolf_action': {
-                    'zh-cn': '狼人请行动，狼人玩家：{wolfs}'
+                    'zh-cn': '狼人请行动，狼人玩家：{wolfs}\n'
+                             '在此期间, 你有{time}秒的时间可以和队友交谈,\n'
+                             '你可以通过 c+no 选择你要杀死的玩家:'
                 },
                 'dawn': {
                     'zh-cn': '天亮了\n'

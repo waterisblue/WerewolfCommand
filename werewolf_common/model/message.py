@@ -35,7 +35,7 @@ class Message:
         try:
             data = json.loads(json_str)
         except json.JSONDecodeError as e:
-            logging.error('json parse error.', e)
+            logging.error(f'json parse error str: {json_str}.', e)
             return cls(Message.CODE_FAILED, Message.TYPE_ERROR, 'json parse error.')
 
         return cls(data['code'], data['type'], data['detail'])
