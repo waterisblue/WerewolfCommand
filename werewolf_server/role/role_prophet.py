@@ -21,7 +21,7 @@ class RoleProPhet(BaseRole):
 
     @property
     def priority(self):
-        return self._priority.value
+        return self._priority
 
     @property
     def channels(self):
@@ -41,6 +41,7 @@ class RoleProPhet(BaseRole):
 
 
     async def night_action(self, game, member):
+        logging.info('prophet night action')
         check_success = False
         while not check_success:
             try:
@@ -95,7 +96,7 @@ class RoleProPhet(BaseRole):
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
                 detail=f'{member.no}: {msg.detail}'
-            ), game.members)
+            ), *game.members)
         return
 
 

@@ -7,7 +7,7 @@ from werewolf_server.utils.i18n import Language
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
     handlers=[
         logging.StreamHandler(),
         logging.FileHandler("app.log", encoding="utf-8")

@@ -107,7 +107,7 @@ class Language:
                 },
                 'not_enough': {
                     'zh-cn': '你没有{str}'
-                }
+                },
             }
             cls._instance.current_language = cls.default_language
         return cls._instance

@@ -22,7 +22,7 @@ class RoleCivilian(BaseRole):
 
     @property
     def priority(self):
-        return self._priority.value
+        return self._priority
 
     @property
     def channels(self):
@@ -41,7 +41,8 @@ class RoleCivilian(BaseRole):
         return self._name
 
     async def night_action(self, game, member):
-        pass
+        logging.info('civilian night action')
+        return
 
     async def day_action(self, game, member):
         speak_done = False
@@ -60,7 +61,7 @@ class RoleCivilian(BaseRole):
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
                 detail=f'{member.no}: {msg.detail}'
-            ), game.members)
+            ), *game.members)
         return
 
     async def voting_action(self, game, member):

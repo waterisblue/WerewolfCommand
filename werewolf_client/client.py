@@ -1,6 +1,8 @@
 import asyncio
 import logging
 
+from urllib3.filepost import writer
+
 from werewolf_common.model.message import Message
 
 logging.basicConfig(level=logging.INFO)
@@ -39,8 +41,14 @@ class WerewolfClient:
                 content = await asyncio.to_thread(input, "Enter message: ")
                 if content.lower() == "exit":
                     break
-
-                message = Message(code=0, type="Player", detail=content)
+                type = Message.TYPE_TEXT
+                content_type = content[:2]
+                if content_type == 'c+':
+                    type = Message.TYPE_CHOOSE
+                    content = content[2:]
+                # elif content_type == 'd+':
+                #     type = Message.TYPE_SPARK_DONE
+                message = Message(code=Message.CODE_SUCCESS, type=type, detail=content)
                 self.writer.write(message.to_json())
                 await self.writer.drain()
         except Exception as e:
@@ -49,12 +57,12 @@ class WerewolfClient:
             self.writer.close()
             await self.writer.wait_closed()
             logging.info("Connection closed")
+            return
 
 
 async def main():
-    for i in range(4):
-        client = WerewolfClient()
-        asyncio.create_task(client.connect())
+    client = WerewolfClient()
+    asyncio.create_task(client.connect())
     await asyncio.sleep(100000)
 
 if __name__ == "__main__":

@@ -53,9 +53,10 @@ class GameDefault4Member(BaseGame):
                 type=Message.TYPE_TEXT,
                 detail=Language.get_translation('darkness')
             ),
-            self.members
+            *self.members
         )
         members_sorted = sorted(self.members, key=lambda m: m.role.priority)
+
         members_priority = OrderedDict()
 
         for member in members_sorted:
@@ -63,14 +64,14 @@ class GameDefault4Member(BaseGame):
             if priority not in members_priority:
                 members_priority[priority] = []
             members_priority[priority].append(member)
-
+        logging.info(members_priority)
         for _, members in members_priority.items():
             actions = []
             for member in members:
                 actions.append(member.role.night_action(game=self, member=member))
             res = await asyncio.gather(*actions)
             # assign dead member
-            if members[0].clamp == Clamp.CLAMP_WOLF:
+            if members[0].role.clamp == Clamp.CLAMP_WOLF:
                 if res:
                     killed_member = res[0]
                     self.now_killed = killed_member
@@ -84,7 +85,7 @@ class GameDefault4Member(BaseGame):
                 type=Message.TYPE_TEXT,
                 detail=Language.get_translation('dawn')
             ),
-            self.members
+            *self.members
         )
         start_index = random.randint(0, self.max_member)
         circular_members = circular_access(self.members, start_index)
@@ -100,7 +101,7 @@ class GameDefault4Member(BaseGame):
                         type=Message.TYPE_TEXT,
                         detail=Language.get_translation('speak', no=member.no, next=next_member.no)
                     ),
-                    self.members
+                    *self.members
                 )
             else:
                 await WerewolfServer.send_message(
@@ -109,7 +110,7 @@ class GameDefault4Member(BaseGame):
                         type=Message.TYPE_TEXT,
                         detail=Language.get_translation('speak_last', no=member.no)
                     ),
-                    self.members
+                    *self.members
                 )
             await member.role.day_action(game=self, member=member)
             await WerewolfServer.send_message(
@@ -118,7 +119,7 @@ class GameDefault4Member(BaseGame):
                     type=Message.TYPE_TEXT,
                     detail=Language.get_translation('speak_end', no=member.no)
                 ),
-                self.members
+                *self.members
             )
 
     async def voting_phase(self):
@@ -128,7 +129,7 @@ class GameDefault4Member(BaseGame):
                 type=Message.TYPE_TEXT,
                 detail=Language.get_translation('voting')
             ),
-            self.members
+            *self.members
         )
         actions = []
         for member in self.members:
@@ -151,7 +152,7 @@ class GameDefault4Member(BaseGame):
                 type=Message.TYPE_TEXT,
                 detail=Language.get_translation('exile_member_result', res=vote_res)
             ),
-            self.members
+            *self.members
         )
 
         max_votes = max(res.values()) if res else 0
@@ -164,7 +165,7 @@ class GameDefault4Member(BaseGame):
                     type=Message.TYPE_TEXT,
                     detail=Language.get_translation('exile_member_equal')
                 ),
-                self.members
+                *self.members
             )
             return
         exiles = exiles[0]
@@ -175,13 +176,14 @@ class GameDefault4Member(BaseGame):
                 type=Message.TYPE_TEXT,
                 detail=Language.get_translation('exile_member', no=exiles.no)
             ),
-            self.members
+            *self.members
         )
         return
 
     async def check_winner(self):
         wolves_count = sum(1 for member in self.members if member.role.clamp == Clamp.CLAMP_WOLF and member.role.status == RoleStatus.STATUS_ALIVE)
-        god_people_count = sum(1 for member in self.members if member.role == Clamp.CLAMP_GOD_PEOPLE and member.role.status == RoleStatus.STATUS_ALIVE)
+        god_people_count = sum(1 for member in self.members if member.role.clamp == Clamp.CLAMP_GOD_PEOPLE and member.role.status == RoleStatus.STATUS_ALIVE)
+        logging.info(f'god people count: {god_people_count}, wolf count: {wolves_count}')
         if wolves_count == 0:
             return Clamp.CLAMP_GOD_PEOPLE
         elif wolves_count >= god_people_count:
@@ -198,7 +200,10 @@ class GameDefault4Member(BaseGame):
             detail=Language.get_translation('game_start')
         ), *self.members)
         await self.assign_roles()
+        logging.info('role assigned done.')
         while not await self.check_winner():
+            logging.info(f'{self.day} day start.')
             await self.night_phase()
             await self.day_phase()
             await self.voting_phase()
+

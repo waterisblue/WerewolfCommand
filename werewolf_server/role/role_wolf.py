@@ -21,7 +21,7 @@ class RoleWolf(BaseRole):
 
     @property
     def priority(self):
-        return self._priority.value
+        return self._priority
 
     @property
     def channels(self):
@@ -41,17 +41,28 @@ class RoleWolf(BaseRole):
 
 
     async def night_action(self, game, member):
+        logging.info('wolf night action')
         speak_done = False
 
         def on_timer_done():
             nonlocal speak_done
             speak_done = True
 
+        wolf_members = [m for m in game.members if m.role.clamp == Clamp.CLAMP_WOLF]
+        wolf_no = ','.join([str(m.no) for m in wolf_members])
+        await WerewolfServer.send_message(Message(
+            code=Message.CODE_SUCCESS,
+            type=Message.TYPE_TEXT,
+            detail=Language.get_translation('wolf_action', wolfs=wolf_no)
+        ), member)
+
         await start_timer_task(game.kill_time, on_timer_done)
         await WerewolfServer.read_ready(member)
-        wolf_members = [m for m in game.members if RoleChannel.CHANNEL_WOLF in m.channels]
+        wolf_members = [m for m in game.members if RoleChannel.CHANNEL_WOLF in m.role.channels]
         check_member = None
+        logging.info(f'speak done : {speak_done}')
         while not speak_done:
+            logging.info('wolf choose kill member')
             msg = await WerewolfServer.read_message(member)
             if msg.type == Message.TYPE_CHOOSE:
                 no = int(msg.detail)
@@ -75,7 +86,7 @@ class RoleWolf(BaseRole):
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
                 detail=f'{member.no}: {msg.detail}'
-            ), wolf_members)
+            ), *wolf_members)
         return check_member
 
     async def day_action(self, game, member):
@@ -95,7 +106,7 @@ class RoleWolf(BaseRole):
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
                 detail=f'{member.no}: {msg.detail}'
-            ), game.members)
+            ), *game.members)
         return
 
     async def voting_action(self, game, member):

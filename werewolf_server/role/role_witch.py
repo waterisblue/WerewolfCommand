@@ -25,7 +25,7 @@ class RoleWitch(BaseRole):
 
     @property
     def priority(self):
-        return self._priority.value
+        return self._priority
 
     @property
     def channels(self):
@@ -44,6 +44,8 @@ class RoleWitch(BaseRole):
         return self._name
 
     async def night_action(self, game, member):
+        logging.info('witch night action')
+
         dead_member = game.now_killed
         if dead_member:
             await WerewolfServer.send_message(Message(
@@ -57,26 +59,35 @@ class RoleWitch(BaseRole):
                 type=Message.TYPE_TEXT,
                 detail=Language.get_translation('night_no_dead')
             ), member)
-        await WerewolfServer.read_ready(member)
-        await WerewolfServer.send_message(Message(
-            code=Message.CODE_SUCCESS,
-            type=Message.TYPE_TEXT,
-            detail=Language.get_translation('save_or_poison')
-        ), member)
-        msg = await WerewolfServer.read_message(member)
-        if msg.type == Message.TYPE_CHOOSE:
-            if msg.detail == 'c+s':
-                dead_member.role.status = RoleStatus.STATUS_ALIVE
-                self.antidote -= 1
-            if msg.detail.startswith('c+p'):
-                p_no = msg.detail.split('+')[-1]
-                for member in game.members:
-                    if member.no != p_no:
-                        continue
-                    member.role.status = RoleStatus.STATUS_DEAD
-                self.poison -= 1
-            if msg.detail == 'c+k':
-                return
+        action_success = False
+        while not action_success:
+            await WerewolfServer.read_ready(member)
+            await WerewolfServer.send_message(Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('save_or_poison')
+            ), member)
+            msg = await WerewolfServer.read_message(member)
+
+            if msg.type == Message.TYPE_CHOOSE:
+                if msg.detail == 's' and self.antidote > 0:
+                    dead_member.role.status = RoleStatus.STATUS_ALIVE
+                    self.antidote -= 1
+                    game.now_killed = None
+                    action_success = True
+                    return
+                if msg.detail.startswith('p') and self.poison > 0:
+                    p_no = msg.detail.split('+')[-1]
+                    for member in game.members:
+                        if member.no != p_no:
+                            continue
+                        member.role.status = RoleStatus.STATUS_DEAD
+                    self.poison -= 1
+                    action_success = True
+                    return
+                if msg.detail == 'k':
+                    action_success = True
+                    return
 
     async def day_action(self, game, member):
         speak_done = False
@@ -95,7 +106,7 @@ class RoleWitch(BaseRole):
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
                 detail=f'{member.no}: {msg.detail}'
-            ), game.members)
+            ), *game.members)
         return
 
     async def voting_action(self, game, member):

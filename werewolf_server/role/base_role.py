@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 from werewolf_server.game.base_game import BaseGame
-from werewolf_server.model.member import Member
 
 
 class RoleStatus(Enum):
@@ -51,15 +50,15 @@ class BaseRole(ABC):
         pass
 
     @abstractmethod
-    async def night_action(self, game: BaseGame, member: Member):
+    async def night_action(self, game: BaseGame, member):
         pass
 
     @abstractmethod
-    async def day_action(self, game: BaseGame, member: Member):
+    async def day_action(self, game: BaseGame, member):
         pass
 
     @abstractmethod
-    async def voting_action(self, game: BaseGame, member: Member):
+    async def voting_action(self, game: BaseGame, member):
         pass
 
 
