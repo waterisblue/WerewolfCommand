@@ -14,7 +14,7 @@ class RoleChannel(Enum):
     CHANNEL_NORMAL = 0
     CHANNEL_WOLF = 1
 
-class NightPriority(Enum):
+class NightPriority:
     PRIORITY_CIVILIAN = 0
     PRIORITY_WOLF = 1
     PRIORITY_PROPHET = 10

@@ -27,6 +27,8 @@ class GameDefault4Member(BaseGame):
         self.day = 1
         self.members: List[Member] = []
         self.speak_time = 60
+        self.kill_time = 30
+        self.now_killed = None
 
 
     async def assign_roles(self):
@@ -66,7 +68,13 @@ class GameDefault4Member(BaseGame):
             actions = []
             for member in members:
                 actions.append(member.role.night_action(game=self, member=member))
-            await asyncio.gather(*actions)
+            res = await asyncio.gather(*actions)
+            # assign dead member
+            if members[0].clamp == Clamp.CLAMP_WOLF:
+                if res:
+                    killed_member = res[0]
+                    self.now_killed = killed_member
+                    killed_member.role.status = RoleStatus.STATUS_DEAD
 
 
     async def day_phase(self):

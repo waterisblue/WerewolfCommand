@@ -58,7 +58,7 @@ class Language:
                     'zh-cn': '玩家开始投票'
                 },
                 'check_check_no': {
-                    'zh-cn': '请输入你要查验的玩家编号：'
+                    'zh-cn': '请输入你要查验的玩家编号(c+no)：'
                 },
                 'member_no_not_found': {
                     'zh-cn': '该玩家不存在或未存活'
@@ -79,10 +79,34 @@ class Language:
                     'zh-cn': '{no}号玩家：{v}票\n'
                 },
                 'exile_input_no': {
-                    'zh-cn': '请选择你要投票放逐的玩家编号：'
+                    'zh-cn': '请选择你要投票放逐的玩家编号(c+玩家编号)：'
                 },
                 'exile_select_no': {
                     'zh-cn': '你投票给了{no}号'
+                },
+                'good_man': {
+                    'zh-cn': '好人'
+                },
+                'kill_member': {
+                    'zh-cn': '你选择了{no}号'
+                },
+                'night_dead': {
+                    'zh-cn': '今晚死亡的是{no}号'
+                },
+                'night_no_dead': {
+                    'zh-cn': '没有人死亡'
+                },
+                'save_or_poison': {
+                    'zh-cn': '你选择（c+s：使用解药，c+p+玩家编号：使用毒药，c+k：跳过）'
+                },
+                'save_member': {
+                    'zh-cn': '你救了{no}号'
+                },
+                'poison_member': {
+                    'zh-cn': '你毒了{no}号'
+                },
+                'not_enough': {
+                    'zh-cn': '你没有{str}'
                 }
             }
             cls._instance.current_language = cls.default_language

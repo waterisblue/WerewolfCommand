@@ -1,3 +1,5 @@
+import logging
+
 from werewolf_common.model.message import Message
 from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel, NightPriority, Clamp
 from werewolf_server.server import WerewolfServer
@@ -39,7 +41,42 @@ class RoleWolf(BaseRole):
 
 
     async def night_action(self, game, member):
-        pass
+        speak_done = False
+
+        def on_timer_done():
+            nonlocal speak_done
+            speak_done = True
+
+        await start_timer_task(game.kill_time, on_timer_done)
+        await WerewolfServer.read_ready(member)
+        wolf_members = [m for m in game.members if RoleChannel.CHANNEL_WOLF in m.channels]
+        check_member = None
+        while not speak_done:
+            msg = await WerewolfServer.read_message(member)
+            if msg.type == Message.TYPE_CHOOSE:
+                no = int(msg.detail)
+                for m in game.members:
+                    if m.no == no and m.status == RoleStatus.STATUS_ALIVE:
+                        check_member = m
+                if not check_member:
+                    await WerewolfServer.send_message(Message(
+                        code=Message.CODE_SUCCESS,
+                        type=Message.TYPE_TEXT,
+                        detail=Language.get_translation('member_no_not_found')
+                    ), member)
+                else:
+                    await WerewolfServer.send_message(Message(
+                        code=Message.CODE_SUCCESS,
+                        type=Message.TYPE_TEXT,
+                        detail=Language.get_translation('kill_member', no=check_member.no)
+                    ), member)
+                continue
+            await WerewolfServer.send_message(Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=f'{member.no}: {msg.detail}'
+            ), wolf_members)
+        return check_member
 
     async def day_action(self, game, member):
         speak_done = False
@@ -58,8 +95,38 @@ class RoleWolf(BaseRole):
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
                 detail=f'{member.no}: {msg.detail}'
-            ))
+            ), game.members)
         return
 
     async def voting_action(self, game, member):
-        pass
+        exile_success = False
+        while not exile_success:
+            try:
+                await WerewolfServer.read_ready(member)
+                await WerewolfServer.send_message(Message(
+                    code=Message.CODE_SUCCESS,
+                    type=Message.TYPE_TEXT,
+                    detail=Language.get_translation('exile_input_no')
+                ), member)
+                msg = await WerewolfServer.read_message(member)
+                no = int(msg.detail.strip())
+                check_member = None
+                for m in game.members:
+                    if m.no == no and m.status == RoleStatus.STATUS_ALIVE:
+                        check_member = m
+                if not check_member:
+                    await WerewolfServer.send_message(Message(
+                        code=Message.CODE_SUCCESS,
+                        type=Message.TYPE_TEXT,
+                        detail=Language.get_translation('member_no_not_found')
+                    ), member)
+                    continue
+                await WerewolfServer.send_message(Message(
+                    code=Message.CODE_SUCCESS,
+                    type=Message.TYPE_TEXT,
+                    detail=Language.get_translation('exile_select_no', no=check_member.no)
+                ), member)
+                exile_success = True
+                return check_member
+            except Exception as e:
+                logging.error(e)

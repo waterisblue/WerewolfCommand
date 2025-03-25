@@ -1,7 +1,5 @@
 import logging
 
-from nltk.data import retrieve
-
 from werewolf_common.model.message import Message
 from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel, NightPriority, Clamp
 from werewolf_server.server import WerewolfServer
@@ -51,8 +49,10 @@ class RoleProPhet(BaseRole):
                     code=Message.CODE_SUCCESS,
                     type=Message.TYPE_TEXT,
                     detail=Language.get_translation('check_check_no')
-                ))
+                ), member)
                 msg = await WerewolfServer.read_message(member)
+                if msg.type != Message.TYPE_CHOOSE:
+                    continue
                 no = int(msg.detail.strip())
                 check_member = None
                 for member in game.members:
@@ -63,13 +63,16 @@ class RoleProPhet(BaseRole):
                         code=Message.CODE_SUCCESS,
                         type=Message.TYPE_TEXT,
                         detail=Language.get_translation('member_no_not_found')
-                    ))
+                    ), member)
                     continue
+                member_role = Language.get_translation('good_man') \
+                    if check_member.role.clamp == Clamp.CLAMP_GOD_PEOPLE \
+                    else Language.get_translation('wolf')
                 await WerewolfServer.send_message(Message(
                     code=Message.CODE_SUCCESS,
                     type=Message.TYPE_TEXT,
-                    detail=Language.get_translation('check_member_role', no=member.no, role_name=check_member.role.name)
-                ))
+                    detail=Language.get_translation('check_member_role', no=member.no, role_name=member_role)
+                ), member)
                 return
             except Exception as e:
                 logging.error(e)
@@ -92,7 +95,7 @@ class RoleProPhet(BaseRole):
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
                 detail=f'{member.no}: {msg.detail}'
-            ))
+            ), game.members)
         return
 
 
@@ -105,7 +108,7 @@ class RoleProPhet(BaseRole):
                     code=Message.CODE_SUCCESS,
                     type=Message.TYPE_TEXT,
                     detail=Language.get_translation('exile_input_no')
-                ))
+                ), member)
                 msg = await WerewolfServer.read_message(member)
                 no = int(msg.detail.strip())
                 check_member = None
@@ -117,13 +120,14 @@ class RoleProPhet(BaseRole):
                         code=Message.CODE_SUCCESS,
                         type=Message.TYPE_TEXT,
                         detail=Language.get_translation('member_no_not_found')
-                    ))
+                    ), member)
                     continue
                 await WerewolfServer.send_message(Message(
                     code=Message.CODE_SUCCESS,
                     type=Message.TYPE_TEXT,
-                    detail=Language.get_translation('exile_select_no', no=m.no)
-                ))
-                return m
+                    detail=Language.get_translation('exile_select_no', no=check_member.no)
+                ), member)
+                exile_success = True
+                return check_member
             except Exception as e:
                 logging.error(e)

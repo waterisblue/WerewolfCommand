@@ -1,3 +1,4 @@
+import logging
 from abc import abstractmethod
 
 from werewolf_common.model.message import Message
@@ -59,8 +60,38 @@ class RoleCivilian(BaseRole):
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
                 detail=f'{member.no}: {msg.detail}'
-            ))
+            ), game.members)
         return
 
     async def voting_action(self, game, member):
-        pass
+        exile_success = False
+        while not exile_success:
+            try:
+                await WerewolfServer.read_ready(member)
+                await WerewolfServer.send_message(Message(
+                    code=Message.CODE_SUCCESS,
+                    type=Message.TYPE_TEXT,
+                    detail=Language.get_translation('exile_input_no')
+                ), member)
+                msg = await WerewolfServer.read_message(member)
+                no = int(msg.detail.strip())
+                check_member = None
+                for m in game.members:
+                    if m.no == no and m.status == RoleStatus.STATUS_ALIVE:
+                        check_member = m
+                if not check_member:
+                    await WerewolfServer.send_message(Message(
+                        code=Message.CODE_SUCCESS,
+                        type=Message.TYPE_TEXT,
+                        detail=Language.get_translation('member_no_not_found')
+                    ), member)
+                    continue
+                await WerewolfServer.send_message(Message(
+                    code=Message.CODE_SUCCESS,
+                    type=Message.TYPE_TEXT,
+                    detail=Language.get_translation('exile_select_no', no=check_member.no)
+                ), member)
+                exile_success = True
+                return check_member
+            except Exception as e:
+                logging.error(e)

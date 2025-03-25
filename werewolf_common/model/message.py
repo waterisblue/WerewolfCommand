@@ -12,6 +12,7 @@ class Message:
     TYPE_ERROR = 'error'
     TYPE_TEXT = 'text'
     TYPE_SPARK_DONE = 'speak_done'
+    TYPE_CHOOSE = 'choose'
 
     code: int
     type: str
