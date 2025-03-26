@@ -10,29 +10,23 @@
 - 方便的命令行界面与操作，方便摸鱼游玩
 - 开放源代码，可扩展与修改
 
-## 环境要求
-
-- Python 3.11 及以上版本
-- 终端或命令行界面
-
-## 安装
-
-1. 克隆项目到本地：
-   ```bash
-   git clone https://github.com/waterisblue/WerewolfCommand.git
-   ```
-
-2. 进入项目目录：
-   ```bash
-   cd WerewolfCommand
-   ```
-
-3. 安装依赖：
-   ```bash
-   pip install -r requirements.txt
-   ```
-
 ## 游玩方法
+
+1、下载发行版：
+
+在命令行中运行游戏服务端：
+
+```bash
+  server.exe
+```
+
+在命令行中运行游戏客户端：
+
+```bash
+  client.exe
+```
+
+2、下载源代码版（方便自行修改游戏逻辑）：
 
 在命令行中运行游戏服务端：
 
@@ -66,6 +60,8 @@
 欢迎任何形式的贡献！如果你有改进的建议或发现了错误，欢迎提交问题（Issue）或拉取请求（Pull Request）。
 
 欢迎添加新角色和对局！角色和对局模板已生成，可以直接套用。
+
+[贡献](contribute.md)
 
 ## 许可证
 
