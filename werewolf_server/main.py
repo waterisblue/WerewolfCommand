@@ -4,6 +4,7 @@ import logging
 from werewolf_server.game.game_default_4_member import GameDefault4Member
 from werewolf_server.server import WerewolfServer
 from werewolf_server.utils.i18n import Language
+import argparse
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -19,9 +20,18 @@ GAME_MODE = {
 }
 
 async def main():
-    port = input(Language.get_translation('port_need'))
+    parser = argparse.ArgumentParser(description="input ip or game mode")
+    parser.add_argument('-p', '--port', type=int, required=False, help='input port')
+    parser.add_argument('-m', '--mode', type=str, required=False, help='input game mode')
+    args = parser.parse_args()
 
-    game_mode = input(Language.get_translation('game_mode_select'))
+    port = args.port
+    if not port:
+        port = input(Language.get_translation('port_need'))
+
+    game_mode = args.mode
+    if not game_mode:
+        game_mode = input(Language.get_translation('game_mode_select'))
     # port = 5555
     # game_mode = '1'
     game = GAME_MODE.get(game_mode)()
