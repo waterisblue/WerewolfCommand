@@ -1,7 +1,12 @@
+import asyncio
 from abc import ABC, abstractmethod
 from enum import Enum
 
+from werewolf_common.model.message import Message
 from werewolf_server.game.base_game import BaseGame
+from werewolf_server.server import WerewolfServer
+from werewolf_server.utils.i18n import Language
+from werewolf_server.utils.time_task import start_timer_task
 
 
 class RoleStatus(Enum):
@@ -55,11 +60,62 @@ class BaseRole(ABC):
 
     @abstractmethod
     async def day_action(self, game: BaseGame, member):
-        pass
+        await WerewolfServer.send_detail(Language.get_translation('day_speak_now'), member)
+        speak_done = asyncio.Event()
+        speak_done.set()
+
+        def on_timer_done():
+            nonlocal speak_done
+            speak_done.clear()
+
+        current_seconds = [game.speak_time]
+        await start_timer_task(game.speak_time, on_timer_done, current_seconds=current_seconds)
+        await WerewolfServer.read_ready(member)
+        while speak_done.is_set():
+            msg = await WerewolfServer.read_message(member, speak_done)
+            if not msg:
+                continue
+            if msg.type == Message.TYPE_SPARK_DONE:
+                return
+            await WerewolfServer.send_detail(
+                Language.get_translation('speak_show', no=member.no, detail=msg.detail, seconds=current_seconds[0]),
+                *game.members
+            )
+        return
 
     @abstractmethod
     async def voting_action(self, game: BaseGame, member):
-        pass
+        exile_success = False
+        while not exile_success:
+            try:
+                await WerewolfServer.read_ready(member)
+                await WerewolfServer.send_message(Message(
+                    code=Message.CODE_SUCCESS,
+                    type=Message.TYPE_TEXT,
+                    detail=Language.get_translation('exile_input_no')
+                ), member)
+                msg = await WerewolfServer.read_message(member)
+                no = int(msg.detail.strip())
+                check_member = None
+                for m in game.members:
+                    if m.no == no and m.role.status == RoleStatus.STATUS_ALIVE:
+                        check_member = m
+                if not check_member:
+                    await WerewolfServer.send_message(Message(
+                        code=Message.CODE_SUCCESS,
+                        type=Message.TYPE_TEXT,
+                        detail=Language.get_translation('member_no_not_found')
+                    ), member)
+                    continue
+                await WerewolfServer.send_message(Message(
+                    code=Message.CODE_SUCCESS,
+                    type=Message.TYPE_TEXT,
+                    detail=Language.get_translation('exile_select_no', no=check_member.no)
+                ), member)
+                exile_success = True
+                return check_member
+            except Exception as e:
+                logging.error(e)
 
     @status.setter
     def status(self, value):

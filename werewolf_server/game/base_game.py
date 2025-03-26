@@ -29,7 +29,7 @@ class BaseGame(ABC):
         pass
 
     @abstractmethod
-    def add_member(self, member):
+    def add_member(self, no: int, addr, writer, reader):
         pass
 
     @abstractmethod

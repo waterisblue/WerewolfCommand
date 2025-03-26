@@ -193,8 +193,8 @@ class GameDefault4Member(BaseGame):
             return Clamp.CLAMP_WOLF
         return False
 
-    def add_member(self, member: Member):
-        self.members.append(member)
+    def add_member(self, no: int, addr, writer, reader):
+        self.members.append(Member(no=no, addr=addr, writer=writer, reader=reader))
 
     async def start(self):
         await WerewolfServer.send_message(Message(

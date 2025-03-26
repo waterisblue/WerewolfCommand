@@ -3,7 +3,6 @@ import logging
 
 from werewolf_common.model.message import Message
 from werewolf_server.game.base_game import BaseGame
-from werewolf_server.model.member import Member
 
 
 class WerewolfServer:
@@ -19,8 +18,7 @@ class WerewolfServer:
             addr = writer.get_extra_info("peername")
             async with self.count_lock:
                 self.count += 1
-                member = Member(self.count, addr, reader, writer)
-                self.game.add_member(member)
+                self.game.add_member(self.count, addr, writer, reader)
                 if len(self.game.members) == self.game.max_member:
                     logging.info('member enough, game start.')
                     await self.game.start()
