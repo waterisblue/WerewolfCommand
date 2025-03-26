@@ -7,6 +7,7 @@ async def main():
     host = input('输入服务器IP：')
     port = input('输入服务器端口：')
     client = WerewolfClient(host=host, port=int(port))
+    print('等待游戏开始...')
     await client.connect()
 
 

@@ -59,7 +59,9 @@ class RoleWolf(BaseRole):
 
         wolf_members = [m for m in game.members if RoleChannel.CHANNEL_WOLF in m.role.channels]
         check_member = None
-        await start_timer_task(game.kill_time, on_timer_done)
+
+        current_seconds = [game.speak_time]
+        await start_timer_task(game.kill_time, on_timer_done, current_seconds=current_seconds)
         while speak_done.is_set():
             logging.info('wolf choose kill member')
             msg = await WerewolfServer.read_message(member, speak_done)
@@ -88,11 +90,15 @@ class RoleWolf(BaseRole):
                         detail=Language.get_translation('kill_member', no=check_member.no)
                     ), member)
                 continue
-            await WerewolfServer.send_message(Message(
-                code=Message.CODE_SUCCESS,
-                type=Message.TYPE_TEXT,
-                detail=f'{member.no}: {msg.detail}'
-            ), *wolf_members)
+            await WerewolfServer.send_detail(
+                Language.get_translation('speak_show', no=member.no, detail=msg.detail, seconds=current_seconds[0]),
+                *wolf_members
+            )
+        await WerewolfServer.send_detail(
+            Language.get_translation('wolf_night_action_done'),
+            *wolf_members
+        )
+
         return check_member
 
     async def day_action(self, game, member):
@@ -103,8 +109,8 @@ class RoleWolf(BaseRole):
         def on_timer_done():
             nonlocal speak_done
             speak_done.clear()
-
-        await start_timer_task(game.speak_time, on_timer_done)
+        current_seconds = [game.speak_time]
+        await start_timer_task(game.speak_time, on_timer_done, current_seconds=current_seconds)
         await WerewolfServer.read_ready(member)
         while speak_done.is_set():
             msg = await WerewolfServer.read_message(member, speak_done)
@@ -112,11 +118,10 @@ class RoleWolf(BaseRole):
                 continue
             if msg.type == Message.TYPE_SPARK_DONE:
                 return
-            await WerewolfServer.send_message(Message(
-                code=Message.CODE_SUCCESS,
-                type=Message.TYPE_TEXT,
-                detail=f'{member.no}: {msg.detail}'
-            ), *game.members)
+            await WerewolfServer.send_detail(
+                Language.get_translation('speak_show', no=member.no, detail=msg.detail, seconds=current_seconds[0]),
+                *game.members
+            )
         return
 
     async def voting_action(self, game, member):

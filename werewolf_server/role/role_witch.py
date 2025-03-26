@@ -101,8 +101,8 @@ class RoleWitch(BaseRole):
         def on_timer_done():
             nonlocal speak_done
             speak_done.clear()
-
-        await start_timer_task(game.speak_time, on_timer_done)
+        current_seconds = [game.speak_time]
+        await start_timer_task(game.speak_time, on_timer_done, current_seconds=current_seconds)
         await WerewolfServer.read_ready(member)
         while speak_done.is_set():
             msg = await WerewolfServer.read_message(member, speak_done)
@@ -110,11 +110,10 @@ class RoleWitch(BaseRole):
                 continue
             if msg.type == Message.TYPE_SPARK_DONE:
                 return
-            await WerewolfServer.send_message(Message(
-                code=Message.CODE_SUCCESS,
-                type=Message.TYPE_TEXT,
-                detail=f'{member.no}: {msg.detail}'
-            ), *game.members)
+            await WerewolfServer.send_detail(
+                Language.get_translation('speak_show', no=member.no, detail=msg.detail, seconds=current_seconds[0]),
+                *game.members
+            )
         return
 
     async def voting_action(self, game, member):
