@@ -28,14 +28,15 @@ class GameDefault4Member(BaseGame):
         self.members: List[Member] = []
         self.speak_time = 10
         self.kill_time = 10
-        self.now_killed = None
+        self.last_night_killed = set()
 
 
     async def assign_roles(self):
+        now_roles = self.roles[:]
         for m in self.members[:4]:
-            idx = random.randint(0, len(self.roles) - 1)
-            rand_role = self.roles[idx]
-            self.roles.remove(rand_role)
+            idx = random.randint(0, len(now_roles) - 1)
+            rand_role = now_roles[idx]
+            now_roles.remove(rand_role)
             m.role = rand_role()
             msg = Message(
                 code=Message.CODE_SUCCESS,
@@ -74,8 +75,7 @@ class GameDefault4Member(BaseGame):
             if members[0].role.clamp == Clamp.CLAMP_WOLF:
                 if res:
                     killed_member = res[0]
-                    self.now_killed = killed_member
-                    killed_member.role.status = RoleStatus.STATUS_DEAD
+                    self.last_night_killed.add(killed_member)
 
 
     async def day_phase(self):
@@ -140,11 +140,11 @@ class GameDefault4Member(BaseGame):
 
         res = defaultdict(int)
         for vote in votes:
-            res[vote] += 1
+            res[vote.no] += 1
 
         vote_res = ''
-        for m, v in res.items():
-            vote_res += Language.get_translation('exile_member_stat', no=m.no, v=v)
+        for no, v in res.items():
+            vote_res += Language.get_translation('exile_member_stat', no=no, v=v)
 
         await WerewolfServer.send_message(
             Message(
@@ -157,7 +157,7 @@ class GameDefault4Member(BaseGame):
 
         max_votes = max(res.values()) if res else 0
 
-        exiles = [member for member, count in res.items() if count == max_votes]
+        exiles = [no for no, count in res.items() if count == max_votes]
         if len(exiles) > 1:
             await WerewolfServer.send_message(
                 Message(
@@ -168,13 +168,16 @@ class GameDefault4Member(BaseGame):
                 *self.members
             )
             return
-        exiles = exiles[0]
-        exiles.status = RoleStatus.STATUS_EXILE
+        exiles_no = exiles[0]
+        for m in self.members:
+            if exiles_no == m.no:
+                m.role.status = RoleStatus.STATUS_EXILE
+
         await WerewolfServer.send_message(
             Message(
                 code=Message.CODE_SUCCESS,
                 type=Message.TYPE_TEXT,
-                detail=Language.get_translation('exile_member', no=exiles.no)
+                detail=Language.get_translation('exile_member', no=exiles_no)
             ),
             *self.members
         )
@@ -204,9 +207,63 @@ class GameDefault4Member(BaseGame):
             await WerewolfServer.send_detail(Language.get_translation('game_no', no=m.no), m)
         await self.assign_roles()
         logging.info('role assigned done.')
-        while not await self.check_winner():
+
+        winner = False
+        while not winner:
             logging.info(f'{self.day} day start.')
             await self.night_phase()
+            nos = []
+            for dead in self.last_night_killed:
+                dead.role.status = RoleStatus.STATUS_DEAD
+                nos.append(f'{dead.no}')
+            if nos:
+                await WerewolfServer.send_detail(
+                    Language.get_translation('last_night_dead', nos=(','.join(nos))),
+                    *self.members
+                )
+            else:
+                await WerewolfServer.send_detail(Language.get_translation('safe_night'), *self.members)
+            winner = await self.check_winner()
+            if winner:
+                break
             await self.day_phase()
             await self.voting_phase()
+            winner = await self.check_winner()
+            if winner:
+                break
+            self.day += 1
+            self.last_night_killed.clear()
 
+        if winner == Clamp.CLAMP_WOLF:
+            await WerewolfServer.send_detail(
+                Language.get_translation(
+                    'game_4_win',
+                    clamp=Language.get_translation('wolf')
+                ),
+                *self.members
+            )
+        else:
+            await WerewolfServer.send_detail(
+                Language.get_translation(
+                    'game_4_win',
+                    clamp=Language.get_translation('god_people')
+                ),
+                *self.members
+            )
+        roles = ''
+        for m in self.members:
+            roles += f'{m.no}: {m.role.name}\n'
+        await WerewolfServer.send_detail(
+            Language.get_translation(
+                'settlement',
+                roles=roles
+            ),
+            *self.members
+        )
+        await asyncio.sleep(10)
+        await self.restart()
+
+    async def restart(self):
+        self.day = 1
+        self.last_night_killed.clear()
+        await self.start()

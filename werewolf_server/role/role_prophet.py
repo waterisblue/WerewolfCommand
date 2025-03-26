@@ -59,7 +59,7 @@ class RoleProPhet(BaseRole):
                 no = int(msg.detail)
                 check_member = None
                 for m in game.members:
-                    if m.no == no and m.role.status == RoleStatus.STATUS_ALIVE and m.no != game.now_killed.no:
+                    if m.no == no and m.role.status == RoleStatus.STATUS_ALIVE:
                         check_member = m
                 if not check_member:
                     await WerewolfServer.send_message(Message(

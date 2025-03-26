@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 class BaseGame(ABC):
     def __init__(self):
-        self.now_killed = None
+        self.last_night_killed = None
         self.kill_time = None
         self.speak_time = None
         self.members = None

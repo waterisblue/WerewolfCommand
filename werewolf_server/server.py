@@ -74,16 +74,17 @@ class WerewolfServer:
     @staticmethod
     async def read_message(member, speak_done=None):
         length = 0
-        while not length:
-            if speak_done:
-                if not speak_done.is_set():
-                    return None
+        length_data = b''
+        while length < 4:
+            if speak_done and not speak_done.is_set():
+                return None
             try:
-                length = await asyncio.wait_for(member.reader.read(4), timeout=0.1)
+                chunk = await asyncio.wait_for(member.reader.read(4 - length), timeout=0.1)
+                length += len(chunk)
+                length_data += chunk
             except asyncio.TimeoutError:
-                length = 0
-                pass
-        data = await member.reader.read(int.from_bytes(length, byteorder='big'))
+                continue
+        data = await member.reader.read(int.from_bytes(length_data, byteorder='big'))
         logging.info(f'read {data.decode()} from {member.addr}')
         return Message.from_json(data)
 

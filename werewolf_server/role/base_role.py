@@ -61,4 +61,8 @@ class BaseRole(ABC):
     async def voting_action(self, game: BaseGame, member):
         pass
 
+    @status.setter
+    def status(self, value):
+        self._status = value
+
 

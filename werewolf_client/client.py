@@ -3,7 +3,14 @@ import logging
 
 from werewolf_common.model.message import Message
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
+    handlers=[
+        # logging.StreamHandler(),
+        # logging.FileHandler("app.log", encoding="utf-8")
+    ]
+)
 
 class WerewolfClient:
     def __init__(self, host="127.0.0.1", port=5555):
@@ -38,7 +45,7 @@ class WerewolfClient:
     async def send_messages(self):
         try:
             while True:
-                content = await asyncio.to_thread(input, "Enter message: ")
+                content = await asyncio.to_thread(input)
                 type = Message.TYPE_TEXT
                 if len(content) > 2:
                     content_type = content[:2]
@@ -65,7 +72,9 @@ class WerewolfClient:
 
 
 async def main():
-    client = WerewolfClient()
+    host = input('输入服务器IP：')
+    port = input('输入服务器端口：')
+    client = WerewolfClient(host=host, port=int(port))
     asyncio.create_task(client.connect())
     await asyncio.sleep(100000)
 

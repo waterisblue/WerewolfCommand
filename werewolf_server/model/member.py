@@ -16,3 +16,14 @@ class Member:
         self.status = Member.STATUS_ONLINE
         self.reader = reader
         self.writer = writer
+
+    def __hash__(self):
+        return hash((self.no, self.addr))
+
+    def __eq__(self, other):
+        if isinstance(other, Member):
+            return self.no == other.no and self.addr == other.addr
+        return False
+
+    def __repr__(self):
+        return f'Member(no={self.no}, addr={self.addr})'

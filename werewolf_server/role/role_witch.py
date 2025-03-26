@@ -44,7 +44,9 @@ class RoleWitch(BaseRole):
         return self._name
 
     async def night_action(self, game, member):
-        dead_member = game.now_killed
+        dead_member = None
+        if game.last_night_killed:
+            dead_member = list(game.last_night_killed)[0]
         if dead_member:
             await WerewolfServer.send_message(Message(
                 code=Message.CODE_SUCCESS,
@@ -69,17 +71,15 @@ class RoleWitch(BaseRole):
 
             if msg.type == Message.TYPE_CHOOSE:
                 if msg.detail == 's' and self.antidote > 0:
-                    dead_member.role.status = RoleStatus.STATUS_ALIVE
                     self.antidote -= 1
-                    game.now_killed = None
+                    game.last_night_killed.clear()
                     action_success = True
                     return
                 if msg.detail.startswith('p') and self.poison > 0:
                     p_no = msg.detail.split('+')[-1]
-                    for member in game.members:
-                        if member.no != p_no:
-                            continue
-                        member.role.status = RoleStatus.STATUS_DEAD
+                    for poison_m in game.members:
+                        if poison_m.no == int(p_no):
+                            game.last_night_killed.add(poison_m)
                     self.poison -= 1
                     action_success = True
                     return

@@ -45,6 +45,9 @@ class Language:
                 'civilian': {
                     'zh-cn': '平民'
                 },
+                'god_people': {
+                  'zh-cn': '神民'
+                },
                 'wolf_action': {
                     'zh-cn': '狼人请行动，狼人玩家：{wolfs}\n'
                              '在此期间, 你有{time}秒的时间可以和队友交谈,\n'
@@ -116,6 +119,25 @@ class Language:
                 'not_enough': {
                     'zh-cn': '你没有{str}'
                 },
+                'last_night_dead': {
+                    'zh-cn': '昨夜{nos}死了'
+                },
+                'safe_night': {
+                    'zh-cn': '昨夜，平安夜'
+                },
+                'game_4_win': {
+                    'zh-cn': '{clamp}阵营获胜'
+                },
+                'witch_notice': {
+                    'zh-cn': '你的解药还剩{antidote}\n'
+                             '你的毒药还剩{poison}\n'
+                             '无法执行此方案'
+                },
+                'settlement': {
+                    'zh-cn': '玩家身份翻牌：\n'
+                             '{roles}\n'
+                             '10s后重新开始游戏...'
+                }
             }
             cls._instance.current_language = cls.default_language
         return cls._instance

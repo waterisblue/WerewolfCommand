@@ -19,11 +19,11 @@ GAME_MODE = {
 }
 
 async def main():
-    # port = input(Language.get_translation('port_need'))
-    #
-    # game_mode = input(Language.get_translation('game_mode_select'))
-    port = 5555
-    game_mode = '1'
+    port = input(Language.get_translation('port_need'))
+
+    game_mode = input(Language.get_translation('game_mode_select'))
+    # port = 5555
+    # game_mode = '1'
     game = GAME_MODE.get(game_mode)()
     server = WerewolfServer(game=game, port=int(port))
     game.server = server
