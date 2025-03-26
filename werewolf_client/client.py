@@ -46,10 +46,11 @@ class WerewolfClient:
         try:
             while True:
                 content = await asyncio.to_thread(input)
+                content = content.strip()
                 type = Message.TYPE_TEXT
-                if len(content) > 2:
+                if len(content) >= 2:
                     content_type = content[:2]
-                    if content_type == 'c+':
+                    if content_type == 'c+' and len(content) > 2:
                         type = Message.TYPE_CHOOSE
                         content = content[2:]
                     elif content_type == 'd+':
@@ -69,14 +70,3 @@ class WerewolfClient:
             await self.writer.wait_closed()
             logging.info("Connection closed")
             return
-
-
-async def main():
-    host = input('输入服务器IP：')
-    port = input('输入服务器端口：')
-    client = WerewolfClient(host=host, port=int(port))
-    asyncio.create_task(client.connect())
-    await asyncio.sleep(100000)
-
-if __name__ == "__main__":
-    asyncio.run(main())

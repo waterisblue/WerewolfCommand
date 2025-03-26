@@ -26,8 +26,8 @@ class GameDefault4Member(BaseGame):
         self.roles = [RoleProPhet, RoleCivilian, RoleWitch, RoleWolf]
         self.day = 1
         self.members: List[Member] = []
-        self.speak_time = 10
-        self.kill_time = 10
+        self.speak_time = 60
+        self.kill_time = 20
         self.last_night_killed = set()
 
 

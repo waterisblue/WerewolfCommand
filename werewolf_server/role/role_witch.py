@@ -76,9 +76,15 @@ class RoleWitch(BaseRole):
                     action_success = True
                     return
                 if msg.detail.startswith('p') and self.poison > 0:
-                    p_no = msg.detail.split('+')[-1]
+                    p_no = -1
+                    try:
+                        p_no = msg.detail.split('+')[-1]
+                        p_no = int(p_no)
+                    except (ValueError, IndexError):
+                        await WerewolfServer.send_detail(Language.get_translation('member_no_not_found'), member)
+                        continue
                     for poison_m in game.members:
-                        if poison_m.no == int(p_no):
+                        if poison_m.no == p_no:
                             game.last_night_killed.add(poison_m)
                     self.poison -= 1
                     action_success = True
@@ -88,6 +94,7 @@ class RoleWitch(BaseRole):
                     return
 
     async def day_action(self, game, member):
+        await WerewolfServer.send_detail(Language.get_translation('day_speak_now'), member)
         speak_done = asyncio.Event()
         speak_done.set()
 

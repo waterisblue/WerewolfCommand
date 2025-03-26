@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from abc import abstractmethod
 
 from werewolf_common.model.message import Message
 from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel, NightPriority, Clamp
@@ -45,6 +44,7 @@ class RoleCivilian(BaseRole):
         return
 
     async def day_action(self, game, member):
+        await WerewolfServer.send_detail(Language.get_translation('day_speak_now'), member)
         speak_done = asyncio.Event()
         speak_done.set()
 

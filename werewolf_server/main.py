@@ -10,7 +10,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        # logging.FileHandler("app.log", encoding="utf-8")
+        logging.FileHandler("app.log", encoding="utf-8")
     ]
 )
 
@@ -27,10 +27,9 @@ async def main():
     game = GAME_MODE.get(game_mode)()
     server = WerewolfServer(game=game, port=int(port))
     game.server = server
-    asyncio.create_task(server.run())
-
     print(Language.get_translation('server_starting', host='0.0.0.0', port=port))
-    await asyncio.sleep(10000)
+    await server.run()
+
 
 
 

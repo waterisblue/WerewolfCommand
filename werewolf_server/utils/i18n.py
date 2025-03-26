@@ -137,6 +137,9 @@ class Language:
                     'zh-cn': '玩家身份翻牌：\n'
                              '{roles}\n'
                              '10s后重新开始游戏...'
+                },
+                'day_speak_now': {
+                    'zh-cn': '到你了，直接键入文字即可发言：'
                 }
             }
             cls._instance.current_language = cls.default_language

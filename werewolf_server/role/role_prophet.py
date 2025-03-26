@@ -56,7 +56,12 @@ class RoleProPhet(BaseRole):
                     continue
                 if msg.type != Message.TYPE_CHOOSE:
                     continue
-                no = int(msg.detail)
+                no = -1
+                try:
+                    no = int(msg.detail)
+                except ValueError:
+                    await WerewolfServer.send_detail(Language.get_translation('member_no_not_found'), member)
+                    continue
                 check_member = None
                 for m in game.members:
                     if m.no == no and m.role.status == RoleStatus.STATUS_ALIVE:
@@ -82,6 +87,7 @@ class RoleProPhet(BaseRole):
 
 
     async def day_action(self, game, member):
+        await WerewolfServer.send_detail(Language.get_translation('day_speak_now'), member)
         speak_done = asyncio.Event()
         speak_done.set()
 
