@@ -2,7 +2,7 @@
   "darkness": "天黑请闭眼",
   "port_need": "请输入端口：",
   "server_starting": "服务器已开启： {host}:{port}",
-  "game_mode_select": "请选择你要进行的游戏模式\n1. 四人局（预女民狼）\n八人局（预女猎民2狼3）\n输入游戏对应的编号：",
+  "game_mode_select": "请选择你要进行的游戏模式\n1. 四人局（预女民狼）\n2. 八人局（预女猎民2狼3）\n输入游戏对应的编号：",
   "game_nos": "参与玩家编号有: {nos}",
   "game_no": "你的玩家编号是: {no}",
   "game_start": "全部玩家已准备，游戏开始",
@@ -27,7 +27,7 @@
   "exile_member_result": "结果：{res}\n",
   "exile_member_stat": "{no}号玩家：{v}票\n",
   "exile_input_no": "请选择你要投票放逐的玩家编号(c+no, 跳过：c+k)：",
-  "exile_select_no": "你投票给了{no}号",
+  "exile_select_no": "你投票给了{no}号，等待其他玩家投票...",
   "good_man": "好人",
   "kill_member": "{wolf_no}号狼人选择了{no}号",
   "night_dead": "今晚死亡的是{no}号",
@@ -44,7 +44,7 @@
   "day_speak_now": "到你了，直接键入文字即可发言，键入 d+ 即可跳过发言：",
   "speak_show": "{no}号：{detail} ({seconds}s)",
   "wolf_night_action_done": "狼人行动结束",
-  "hunter_shoot_choose": "输入你要击毙的玩家(使用：c+no，跳过：c+k)：",
+  "hunter_shoot_choose": "你已被杀死/放逐，输入你要击毙的玩家(使用：c+no，跳过：c+k)：",
   "final_kill_member": "最终被杀死的玩家是{no}号",
   "member_shot": "{no}号玩家开枪带走了{shoot_no}号玩家"
 }
