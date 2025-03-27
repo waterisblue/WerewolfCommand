@@ -1,11 +1,5 @@
-import asyncio
-import logging
-
-from werewolf_common.model.message import Message
 from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel, NightPriority, Clamp
-from werewolf_server.server import WerewolfServer
 from werewolf_server.utils.i18n import Language
-from werewolf_server.utils.time_task import start_timer_task
 
 
 class RoleCivilian(BaseRole):
@@ -48,3 +42,6 @@ class RoleCivilian(BaseRole):
 
     async def voting_action(self, game, member):
         return await super().voting_action(game, member)
+
+    async def dead_action(self, game, member):
+        pass

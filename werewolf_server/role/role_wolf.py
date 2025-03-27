@@ -87,8 +87,8 @@ class RoleWolf(BaseRole):
                     await WerewolfServer.send_message(Message(
                         code=Message.CODE_SUCCESS,
                         type=Message.TYPE_TEXT,
-                        detail=Language.get_translation('kill_member', no=check_member.no)
-                    ), member)
+                        detail=Language.get_translation('kill_member', wolf_no=member.no, no=check_member.no)
+                    ), *wolf_members)
                 continue
             await WerewolfServer.send_detail(
                 Language.get_translation('speak_show', no=member.no, detail=msg.detail, seconds=current_seconds[0]),
@@ -96,7 +96,7 @@ class RoleWolf(BaseRole):
             )
         await WerewolfServer.send_detail(
             Language.get_translation('wolf_night_action_done'),
-            *wolf_members
+            member
         )
 
         return check_member
@@ -106,3 +106,6 @@ class RoleWolf(BaseRole):
 
     async def voting_action(self, game, member):
         return await super().voting_action(game, member)
+
+    async def dead_action(self, game, member):
+        pass

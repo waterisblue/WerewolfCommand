@@ -9,8 +9,9 @@ from fiona.crs import defaultdict
 from werewolf_common.model.message import Message
 from werewolf_server.game.base_game import BaseGame
 from werewolf_server.model.member import Member
-from werewolf_server.role.base_role import RoleStatus, Clamp
+from werewolf_server.role.base_role import RoleStatus, Clamp, RoleChannel
 from werewolf_server.role.role_civilian import RoleCivilian
+from werewolf_server.role.role_hunter import RoleHunter
 from werewolf_server.role.role_prophet import RoleProPhet
 from werewolf_server.role.role_witch import RoleWitch
 from werewolf_server.role.role_wolf import RoleWolf
@@ -19,21 +20,21 @@ from werewolf_server.utils.game import circular_access
 from werewolf_server.utils.i18n import Language
 
 
-class GameDefault4Member(BaseGame):
+class GameDefault8Member(BaseGame):
     def __init__(self):
         super().__init__()
-        self.max_member = 4
-        self.roles = [RoleProPhet, RoleCivilian, RoleWitch, RoleWolf]
+        self.max_member = 8
+        self.roles = [RoleProPhet, RoleWitch, RoleWolf, RoleWolf, RoleWolf, RoleCivilian, RoleCivilian, RoleHunter]
         self.day = 1
         self.members: List[Member] = []
-        self.speak_time = 60
-        self.kill_time = 20
+        self.speak_time = 90
+        self.kill_time = 30
         self.last_night_killed = set()
 
 
     async def assign_roles(self):
         now_roles = self.roles[:]
-        for m in self.members[:4]:
+        for m in self.members[:self.max_member]:
             idx = random.randint(0, len(now_roles) - 1)
             rand_role = now_roles[idx]
             now_roles.remove(rand_role)
@@ -69,15 +70,19 @@ class GameDefault4Member(BaseGame):
         for _, members in members_priority.items():
             actions = []
             for member in members:
-                if member.role.status != RoleStatus.STATUS_ALIVE:
-                    continue
                 actions.append(member.role.night_action(game=self, member=member))
             res = await asyncio.gather(*actions)
             # assign dead member
             if members[0].role.clamp == Clamp.CLAMP_WOLF:
+                res = [r for r in res if r]
                 if res:
+                    wolf_members = [m for m in self.members if RoleChannel.CHANNEL_WOLF in m.role.channels]
                     killed_member = res[0]
                     self.last_night_killed.add(killed_member)
+                    await WerewolfServer.send_detail(
+                        Language.get_translation('final_kill_member', no=killed_member.no),
+                        *wolf_members
+                    )
 
 
     async def day_phase(self):
@@ -139,7 +144,7 @@ class GameDefault4Member(BaseGame):
                 continue
             actions.append(member.role.voting_action(game=self, member=member))
         votes = await asyncio.gather(*actions)
-
+        votes = [v for v in votes if v]
         res = defaultdict(int)
         for vote in votes:
             res[vote.no] += 1
@@ -147,6 +152,7 @@ class GameDefault4Member(BaseGame):
         vote_res = ''
         for no, v in res.items():
             vote_res += Language.get_translation('exile_member_stat', no=no, v=v)
+
 
         await WerewolfServer.send_message(
             Message(
@@ -173,6 +179,7 @@ class GameDefault4Member(BaseGame):
         exiles_no = exiles[0]
         for m in self.members:
             if exiles_no == m.no:
+                await m.role.dead_action(self, m)
                 m.role.status = RoleStatus.STATUS_EXILE
 
         await WerewolfServer.send_message(
@@ -204,7 +211,7 @@ class GameDefault4Member(BaseGame):
             type=Message.TYPE_TEXT,
             detail=Language.get_translation('game_start')
         ), *self.members)
-        await WerewolfServer.send_detail(Language.get_translation('game_nos', nos='1, 2, 3, 4'), *self.members)
+        await WerewolfServer.send_detail(Language.get_translation('game_nos', nos='1, 2, 3, 4, 5, 6, 7, 8'), *self.members)
         for m in self.members:
             await WerewolfServer.send_detail(Language.get_translation('game_no', no=m.no), m)
         await self.assign_roles()
@@ -216,6 +223,7 @@ class GameDefault4Member(BaseGame):
             await self.night_phase()
             nos = []
             for dead in self.last_night_killed:
+                await dead.role.dead_action(self, dead)
                 dead.role.status = RoleStatus.STATUS_DEAD
                 nos.append(f'{dead.no}')
             if nos:

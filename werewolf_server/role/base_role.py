@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from enum import Enum
 
@@ -95,7 +96,15 @@ class BaseRole(ABC):
                     detail=Language.get_translation('exile_input_no')
                 ), member)
                 msg = await WerewolfServer.read_message(member)
-                no = int(msg.detail.strip())
+                if msg.type != Message.TYPE_CHOOSE:
+                    continue
+                if msg.detail == 'k':
+                    return
+                try:
+                    no = int(msg.detail.strip())
+                except ValueError:
+                    await WerewolfServer.send_detail(Language.get_translation('member_no_not_found'), member)
+                    continue
                 check_member = None
                 for m in game.members:
                     if m.no == no and m.role.status == RoleStatus.STATUS_ALIVE:
@@ -116,6 +125,10 @@ class BaseRole(ABC):
                 return check_member
             except Exception as e:
                 logging.error(e)
+
+    @abstractmethod
+    async def dead_action(self, game, member):
+        pass
 
     @status.setter
     def status(self, value):

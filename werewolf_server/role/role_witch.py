@@ -4,6 +4,7 @@ import logging
 
 from werewolf_common.model.message import Message
 from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel, NightPriority, Clamp
+from werewolf_server.role.role_hunter import RoleHunter
 from werewolf_server.server import WerewolfServer
 from werewolf_server.utils.i18n import Language
 from werewolf_server.utils.time_task import start_timer_task
@@ -71,6 +72,8 @@ class RoleWitch(BaseRole):
 
             if msg.type == Message.TYPE_CHOOSE:
                 if msg.detail == 's' and self.antidote > 0:
+                    if len(game.last_night_killed) < 1:
+                        continue
                     self.antidote -= 1
                     game.last_night_killed.clear()
                     action_success = True
@@ -85,6 +88,12 @@ class RoleWitch(BaseRole):
                         continue
                     for poison_m in game.members:
                         if poison_m.no == p_no:
+                            if poison_m.role.status != RoleStatus.STATUS_ALIVE:
+                                await WerewolfServer.send_detail(Language.get_translation('member_no_not_found'),member)
+                                break
+                            # hunter bullet
+                            if isinstance(poison_m, RoleHunter):
+                                poison_m.bullet = 0
                             game.last_night_killed.add(poison_m)
                     self.poison -= 1
                     action_success = True
@@ -98,3 +107,6 @@ class RoleWitch(BaseRole):
 
     async def voting_action(self, game, member):
         return await super().voting_action(game, member)
+
+    async def dead_action(self, game, member):
+        pass

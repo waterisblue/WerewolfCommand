@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from werewolf_server.game.game_default_4_member import GameDefault4Member
+from werewolf_server.game.game_default_8_member import GameDefault8Member
 from werewolf_server.server import WerewolfServer
 from werewolf_server.utils.i18n import Language
 import argparse
@@ -16,7 +17,8 @@ logging.basicConfig(
 )
 
 GAME_MODE = {
-    '1': GameDefault4Member
+    '1': GameDefault4Member,
+    '2': GameDefault8Member
 }
 
 async def main():
