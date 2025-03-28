@@ -108,3 +108,71 @@ class RoleWitch(BaseRole):
 
     async def last_word_action(self, game, member):
         await super().last_word_action(game, member)
+
+
+
+class RoleWitchOneDaySave(RoleWitch):
+    def __init__(self):
+        super().__init__()
+
+    async def night_action(self, game, member):
+        dead_member = None
+        if game.last_night_killed:
+            dead_member = list(game.last_night_killed)[0]
+        if dead_member:
+            await WerewolfServer.send_message(Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('night_dead', no=dead_member.no)
+            ), member)
+        else:
+            await WerewolfServer.send_message(Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('night_no_dead')
+            ), member)
+        action_success = False
+        while not action_success:
+            await WerewolfServer.read_ready(member)
+            await WerewolfServer.send_message(Message(
+                code=Message.CODE_SUCCESS,
+                type=Message.TYPE_TEXT,
+                detail=Language.get_translation('save_or_poison')
+            ), member)
+            msg = await WerewolfServer.read_message(member)
+
+            if msg.type == Message.TYPE_CHOOSE:
+                if msg.detail == 's' and self.antidote > 0:
+                    if len(game.last_night_killed) < 1:
+                        continue
+                    if dead_member.no == member.no:
+                        await WerewolfServer.send_detail(Language.get_translation('witch_cannot_safe_self'), member)
+                        continue
+                    self.antidote -= 1
+                    game.last_night_killed.clear()
+                    action_success = True
+                    return
+                if msg.detail.startswith('p') and self.poison > 0:
+                    p_no = -1
+                    try:
+                        p_no = msg.detail.split('+')[-1]
+                        p_no = int(p_no)
+                    except (ValueError, IndexError):
+                        await WerewolfServer.send_detail(Language.get_translation('member_no_not_found'), member)
+                        continue
+                    for poison_m in game.members:
+                        if poison_m.no == p_no:
+                            if poison_m.role.status != RoleStatus.STATUS_ALIVE:
+                                await WerewolfServer.send_detail(Language.get_translation('member_no_not_found'),
+                                                                 member)
+                                break
+                            # hunter bullet
+                            if isinstance(poison_m, RoleHunter):
+                                poison_m.bullet = 0
+                            game.last_night_killed.add(poison_m)
+                    self.poison -= 1
+                    action_success = True
+                    return
+                if msg.detail == 'k':
+                    action_success = True
+                    return

@@ -49,5 +49,6 @@
   "member_shot": "{no}号玩家开枪带走了{shoot_no}号玩家",
   "last_word_start": "{nos}号玩家开始发表遗言",
   "last_word_input": "请输入你的遗言（输入+d即可跳过该环节）:",
-  "night_action_notice": "{role}行动中..."
+  "night_action_notice": "{role}行动中...",
+  "witch_cannot_safe_self": "你已中刀，不可自救"
 }

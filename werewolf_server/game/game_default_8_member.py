@@ -13,19 +13,18 @@ from werewolf_server.role.base_role import RoleStatus, Clamp, RoleChannel
 from werewolf_server.role.role_civilian import RoleCivilian
 from werewolf_server.role.role_hunter import RoleHunter
 from werewolf_server.role.role_prophet import RoleProPhet
-from werewolf_server.role.role_witch import RoleWitch
+from werewolf_server.role.role_witch import RoleWitchOneDaySave
 from werewolf_server.role.role_wolf import RoleWolf
 from werewolf_server.server import WerewolfServer
 from werewolf_server.utils.game import circular_access
 from werewolf_server.utils.i18n import Language
-from werewolf_server.utils.time_task import start_timer_task
 
 
 class GameDefault8Member(BaseGame):
     def __init__(self):
         super().__init__()
         self.max_member = 8
-        self.roles = [RoleProPhet, RoleWitch, RoleWolf, RoleWolf, RoleWolf, RoleCivilian, RoleCivilian, RoleHunter]
+        self.roles = [RoleProPhet, RoleWitchOneDaySave, RoleWolf, RoleWolf, RoleWolf, RoleCivilian, RoleCivilian, RoleHunter]
         self.day = 1
         self.members: List[Member] = []
         self.speak_time = 90
