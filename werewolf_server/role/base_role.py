@@ -147,7 +147,7 @@ class BaseRole(ABC):
         current_seconds = [game.speak_time]
         await start_timer_task(game.speak_time, on_timer_done, current_seconds=current_seconds)
         await WerewolfServer.read_ready(member)
-        await WerewolfServer.send_detail(Language.get_translation('last_word_input'))
+        await WerewolfServer.send_detail(Language.get_translation('last_word_input'), member)
         while speak_done.is_set():
             msg = await WerewolfServer.read_message(member, speak_done)
             if not msg:

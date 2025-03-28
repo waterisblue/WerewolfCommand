@@ -70,6 +70,9 @@ class GameDefault8Member(BaseGame):
         logging.info(members_priority)
         for _, members in members_priority.items():
             actions = []
+            await WerewolfServer.send_detail(
+                Language.get_translation('night_action_notice', role=members[0].role.name), *self.members
+            )
             for member in members:
                 actions.append(member.role.night_action(game=self, member=member))
             res = await asyncio.gather(*actions)
@@ -87,14 +90,6 @@ class GameDefault8Member(BaseGame):
 
 
     async def day_phase(self):
-        await WerewolfServer.send_message(
-            Message(
-                code=Message.CODE_SUCCESS,
-                type=Message.TYPE_TEXT,
-                detail=Language.get_translation('dawn')
-            ),
-            *self.members
-        )
         start_index = random.randint(0, self.max_member)
         circular_members = circular_access(self.members, start_index)
         alive_members = [m for m in circular_members if m.role.status == RoleStatus.STATUS_ALIVE]
@@ -237,16 +232,18 @@ class GameDefault8Member(BaseGame):
             winner = await self.check_winner()
             if winner:
                 break
+            await WerewolfServer.send_detail(Language.get_translation('dawn'), *self.members)
+            # last words
+            if self.day == 1:
+                await WerewolfServer.send_detail(Language.get_translation('last_word_start', nos=(','.join(dead_nos))), *self.members)
+                for dead in self.last_night_killed:
+                    await dead.role.last_word_action(self, dead)
+
             await self.day_phase()
             await self.voting_phase()
             winner = await self.check_winner()
             if winner:
                 break
-
-            # last words
-            await WerewolfServer.send_detail(Language.get_translation('last_word_start', nos=(','.join(dead_nos))))
-            for dead in self.last_night_killed:
-                await dead.role.last_word_action(self, dead)
 
             self.day += 1
             self.last_night_killed.clear()
