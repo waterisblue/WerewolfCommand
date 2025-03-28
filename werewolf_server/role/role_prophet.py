@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from werewolf_common.model.message import Message
@@ -94,3 +93,6 @@ class RoleProPhet(BaseRole):
 
     async def dead_action(self, game, member):
         pass
+
+    async def last_word_action(self, game, member):
+        await super().last_word_action(game, member)

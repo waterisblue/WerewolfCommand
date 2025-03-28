@@ -18,6 +18,7 @@ from werewolf_server.role.role_wolf import RoleWolf
 from werewolf_server.server import WerewolfServer
 from werewolf_server.utils.game import circular_access
 from werewolf_server.utils.i18n import Language
+from werewolf_server.utils.time_task import start_timer_task
 
 
 class GameDefault8Member(BaseGame):
@@ -221,14 +222,14 @@ class GameDefault8Member(BaseGame):
         while not winner:
             logging.info(f'{self.day} day start.')
             await self.night_phase()
-            nos = []
+            dead_nos = []
             for dead in self.last_night_killed:
                 await dead.role.dead_action(self, dead)
                 dead.role.status = RoleStatus.STATUS_DEAD
-                nos.append(f'{dead.no}')
-            if nos:
+                dead_nos.append(f'{dead.no}')
+            if dead_nos:
                 await WerewolfServer.send_detail(
-                    Language.get_translation('last_night_dead', nos=(','.join(nos))),
+                    Language.get_translation('last_night_dead', nos=(','.join(dead_nos))),
                     *self.members
                 )
             else:
@@ -241,6 +242,12 @@ class GameDefault8Member(BaseGame):
             winner = await self.check_winner()
             if winner:
                 break
+
+            # last words
+            await WerewolfServer.send_detail(Language.get_translation('last_word_start', nos=(','.join(dead_nos))))
+            for dead in self.last_night_killed:
+                await dead.role.last_word_action(self, dead)
+
             self.day += 1
             self.last_night_killed.clear()
 

@@ -135,3 +135,27 @@ class BaseRole(ABC):
         self._status = value
 
 
+    @abstractmethod
+    async def last_word_action(self, game, member):
+        speak_done = asyncio.Event()
+        speak_done.set()
+
+        def on_timer_done():
+            nonlocal speak_done
+            speak_done.clear()
+
+        current_seconds = [game.speak_time]
+        await start_timer_task(game.speak_time, on_timer_done, current_seconds=current_seconds)
+        await WerewolfServer.read_ready(member)
+        await WerewolfServer.send_detail(Language.get_translation('last_word_input'))
+        while speak_done.is_set():
+            msg = await WerewolfServer.read_message(member, speak_done)
+            if not msg:
+                continue
+            if msg.type == Message.TYPE_SPARK_DONE:
+                break
+            await WerewolfServer.send_detail(
+                Language.get_translation('speak_show', no=member.no, detail=msg.detail,
+                                         seconds=current_seconds[0]),
+                *game.members
+            )

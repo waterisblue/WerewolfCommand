@@ -46,5 +46,7 @@
   "wolf_night_action_done": "狼人行动结束",
   "hunter_shoot_choose": "你已被杀死/放逐，输入你要击毙的玩家(使用：c+no，跳过：c+k)：",
   "final_kill_member": "最终被杀死的玩家是{no}号",
-  "member_shot": "{no}号玩家开枪带走了{shoot_no}号玩家"
+  "member_shot": "{no}号玩家开枪带走了{shoot_no}号玩家",
+  "last_word_start": "{nos}号玩家开始发表遗言",
+  "last_word_input": "请输入你的遗言（输入+d即可跳过该环节）:"
 }

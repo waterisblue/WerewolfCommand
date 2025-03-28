@@ -3,6 +3,7 @@ from werewolf_server.utils.i18n import Language
 
 
 class RoleCivilian(BaseRole):
+
     def __init__(self):
         self._status = RoleStatus.STATUS_ALIVE
         self._name = Language.get_translation('civilian')
@@ -45,3 +46,6 @@ class RoleCivilian(BaseRole):
 
     async def dead_action(self, game, member):
         pass
+
+    async def last_word_action(self, game, member):
+        await super().last_word_action(game, member)

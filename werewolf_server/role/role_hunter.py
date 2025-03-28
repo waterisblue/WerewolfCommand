@@ -77,4 +77,5 @@ class RoleHunter(BaseRole):
                     return
             return
 
-
+    async def last_word_action(self, game, member):
+        await super().last_word_action(game, member)

@@ -1,13 +1,8 @@
-import asyncio
-import logging
-
-
 from werewolf_common.model.message import Message
 from werewolf_server.role.base_role import BaseRole, RoleStatus, RoleChannel, NightPriority, Clamp
 from werewolf_server.role.role_hunter import RoleHunter
 from werewolf_server.server import WerewolfServer
 from werewolf_server.utils.i18n import Language
-from werewolf_server.utils.time_task import start_timer_task
 
 
 class RoleWitch(BaseRole):
@@ -110,3 +105,6 @@ class RoleWitch(BaseRole):
 
     async def dead_action(self, game, member):
         pass
+
+    async def last_word_action(self, game, member):
+        await super().last_word_action(game, member)
